@@ -137,7 +137,7 @@ export default function AlgerianWatchLandingPage() {
     if (phone.trim().length >= 9) {
       idleTimerRef.current = setTimeout(() => {
         logCustomerData('idle_timeout');
-      }, 4000);
+      }, 15000); // 15 seconds of no activity before considering it abandoned
     }
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
