@@ -357,6 +357,29 @@ export default function AlgerianWatchLandingPage() {
 
           <form onSubmit={handleSubmitOrder} className="space-y-4">
 
+            {/* Model Selection Dropdown (Always Visible) */}
+            <div className="mb-2">
+              <label htmlFor="modelSelectForm" className="block text-sm font-bold text-slate-900 mb-1.5">اختر الموديل (اللون) المطلوب <span className="text-[#DC2626]">*</span></label>
+              <div className="relative">
+                <select
+                  id="modelSelectForm"
+                  value={selectedModel.id}
+                  onChange={(e) => {
+                    const model = WATCH_MODELS.find(m => m.id === Number(e.target.value));
+                    if (model) setSelectedModel(model);
+                  }}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"
+                >
+                  {WATCH_MODELS.map(model => (
+                    <option key={model.id} value={model.id}>{model.name}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                  ▼
+                </div>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-bold text-slate-900 mb-1.5">الاسم الكامل <span className="text-[#DC2626]">*</span></label>
               <input
@@ -453,29 +476,6 @@ export default function AlgerianWatchLandingPage() {
                   />
                 </div>
 
-                {/* Model Selection Dropdown (Inside Form) */}
-                <div className="pt-2">
-                  <label htmlFor="modelSelectForm" className="block text-sm font-bold text-slate-900 mb-1.5">اختر الموديل (اللون) المطلوب <span className="text-[#DC2626]">*</span></label>
-                  <div className="relative">
-                    <select
-                      id="modelSelectForm"
-                      value={selectedModel.id}
-                      onChange={(e) => {
-                        const model = WATCH_MODELS.find(m => m.id === Number(e.target.value));
-                        if (model) setSelectedModel(model);
-                      }}
-                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"
-                    >
-                      {WATCH_MODELS.map(model => (
-                        <option key={model.id} value={model.id}>{model.name}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
-                      ▼
-                    </div>
-                  </div>
-                </div>
-
                 {/* Total Recap */}
                 <div className="bg-[#222355]/5 rounded-xl p-4 border border-[#222355]/20">
                   <div className="flex justify-between items-center mb-2 text-sm text-slate-700">
@@ -519,12 +519,12 @@ export default function AlgerianWatchLandingPage() {
       </main>
 
       {/* Sticky Mobile Buy Button (Jumps to form) */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-3 lg:hidden z-50">
+      <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-200 p-3 lg:hidden z-50">
         <button
           onClick={scrollToForm}
-          className="w-full py-3.5 bg-[#DC2626] text-white rounded-xl font-black shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-gradient-to-r from-[#DC2626] to-[#EF4444] text-white rounded-xl font-black text-lg shadow-[0_4px_20px_rgb(220,38,38,0.3)] flex items-center justify-center gap-2"
         >
-          <ShoppingBag className="w-5 h-5" />
+          <ShoppingBag className="w-5 h-5 animate-pulse" />
           اطلب الآن - الدفع عند الاستلام
         </button>
       </div>
