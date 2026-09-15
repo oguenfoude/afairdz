@@ -4,23 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import {
-  User,
-  Phone,
-  MapPin,
-  Building2,
-  Home,
-  Truck,
   CheckCircle2,
-  AlertCircle,
-  ShieldCheck,
-  ChevronDown,
   ShoppingBag,
-  Package,
   Check,
-  Sparkles,
   Gift,
-  Clock,
-  Star
+  Star,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import {
   wilayas,
@@ -30,7 +20,7 @@ import {
   Commune
 } from '@/data/wilayas';
 import { trackFBPixel } from '@/components/FacebookPixel';
-import { WATCH_MODELS, WatchModel, PACKAGE_OFFERS } from '@/data/products';
+import { WATCH_MODELS, WatchModel } from '@/data/products';
 
 interface OrderSuccessData {
   orderId: string;
@@ -46,7 +36,6 @@ interface OrderSuccessData {
 
 export default function AlgerianWatchLandingPage() {
   const [selectedModel, setSelectedModel] = useState<WatchModel>(WATCH_MODELS[0]);
-  const [quantity, setQuantity] = useState<number>(1);
 
   // Form Inputs
   const [fullName, setFullName] = useState('');
@@ -60,6 +49,40 @@ export default function AlgerianWatchLandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [orderSuccess, setOrderSuccess] = useState<OrderSuccessData | null>(null);
+
+  // Swipe State for Image Gallery
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const handleNextImage = () => {
+    const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
+    const nextIndex = (currentIndex + 1) % WATCH_MODELS.length;
+    setSelectedModel(WATCH_MODELS[nextIndex]);
+  };
+
+  const handlePrevImage = () => {
+    const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
+    const prevIndex = currentIndex === 0 ? WATCH_MODELS.length - 1 : currentIndex - 1;
+    setSelectedModel(WATCH_MODELS[prevIndex]);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEndEvent = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    
+    // In RTL, swiping left (finger moves left, distance > 0) usually goes to next
+    if (distance > 50) handleNextImage();
+    if (distance < -50) handlePrevImage();
+  };
 
   // References
   const formSectionRef = useRef<HTMLDivElement>(null);
@@ -81,9 +104,8 @@ export default function AlgerianWatchLandingPage() {
   const deskFee = 500;
   const currentDeliveryFee = deliveryType === 'desk' ? deskFee : domicileFee;
 
-  const unitPrice = quantity === 1 ? 1500 : quantity === 2 ? 1400 : 1300;
-  const productPrice = quantity * unitPrice;
-  const originalPrice = quantity * 3000;
+  const productPrice = 1500;
+  const originalPrice = 3000;
   const totalPrice = productPrice + currentDeliveryFee;
 
   const hasLocation = Boolean(wilayaId && communeName);
@@ -156,7 +178,7 @@ export default function AlgerianWatchLandingPage() {
         communeName,
         deliveryType,
         addressDetails: addressDetails.trim(),
-        quantity,
+        quantity: 1,
         productPrice,
         deliveryFee: currentDeliveryFee,
         totalPrice,
@@ -222,7 +244,7 @@ export default function AlgerianWatchLandingPage() {
 
       {/* Header */}
       <header className="bg-white border-b border-slate-200 py-3 px-4 flex justify-center sticky top-[36px] z-40">
-        <Image src="/logo.png" alt="Affaire DZ" width={140} height={40} priority className="h-10 w-auto" />
+        <Image src="/logo.png" alt="Affaire DZ" width={140} height={40} priority className="h-10" style={{ width: 'auto', height: 'auto' }} />
       </header>
 
       {/* Main Container - Narrow width for YouCan style */}
@@ -257,28 +279,45 @@ export default function AlgerianWatchLandingPage() {
         </div>
 
         {/* Main Product Image */}
-        <div className="w-full aspect-square bg-slate-50 relative border-y border-slate-100">
+        <div 
+          className="w-full aspect-square bg-slate-50 relative border-y border-slate-100 overflow-hidden touch-pan-y group"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEndEvent}
+        >
+          {/* Navigation Arrows (Visible on Desktop / Easier tapping) */}
+          <button onClick={handleNextImage} type="button" className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button onClick={handlePrevImage} type="button" className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+            <ChevronRight className="w-6 h-6" />
+          </button>
+
+          {/* Model Number Badge Floating on Top */}
+          <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-sm font-black shadow-lg border border-white/20">
+            {selectedModel.name}
+          </div>
           <Image
+            key={selectedModel.id}
             src={selectedModel.image}
             alt={selectedModel.name}
             fill
             sizes="(max-width: 768px) 100vw, 800px"
             priority
-            className="object-contain p-4"
+            className="object-contain"
           />
         </div>
 
-        {/* Model Thumbnails */}
-        <div className="px-4 py-4 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="text-sm font-bold text-slate-900 mb-3">اختر الموديل (اللون): <span className="text-[#222355]">{selectedModel.name}</span></h3>
+        {/* Image Gallery Thumbnails */}
+        <div className="px-4 py-4 border-b border-slate-100 bg-white">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
             {WATCH_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => setSelectedModel(model)}
                 type="button"
-                className={`relative w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 snap-start bg-white transition-all ${
-                  selectedModel.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200'
+                className={`relative w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 snap-start bg-slate-50 transition-all ${
+                  selectedModel.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-60'
                 }`}
               >
                 <Image src={model.image} alt={model.name} fill sizes="64px" className="object-cover p-1" />
@@ -317,24 +356,6 @@ export default function AlgerianWatchLandingPage() {
           </div>
 
           <form onSubmit={handleSubmitOrder} className="space-y-4">
-            
-            {/* Quantity Selector */}
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-slate-900 mb-2">اختر العرض المناسب لك:</label>
-              <div className="space-y-2">
-                {PACKAGE_OFFERS.map(offer => (
-                  <label key={offer.quantity} className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${quantity === offer.quantity ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${quantity === offer.quantity ? 'border-[#222355]' : 'border-slate-300'}`}>
-                        {quantity === offer.quantity && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
-                      </div>
-                      <span className="font-bold text-slate-900 text-sm">{offer.title}</span>
-                    </div>
-                    <span className="font-black text-[#DC2626]">{offer.totalPrice} دج</span>
-                  </label>
-                ))}
-              </div>
-            </div>
 
             <div>
               <label className="block text-sm font-bold text-slate-900 mb-1.5">الاسم الكامل <span className="text-[#DC2626]">*</span></label>
@@ -355,8 +376,9 @@ export default function AlgerianWatchLandingPage() {
                 type="tel"
                 required
                 dir="ltr"
+                maxLength={10}
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
+                onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
                 onBlur={() => logCustomerData('input_blur')}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none text-right"
                 placeholder="05 / 06 / 07 XX XX XX XX"
@@ -398,7 +420,7 @@ export default function AlgerianWatchLandingPage() {
                 <div>
                   <label className="block text-sm font-bold text-slate-900 mb-2">طريقة التوصيل <span className="text-[#DC2626]">*</span></label>
                   <div className="space-y-2">
-                    <label className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${deliveryType === 'domicile' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
+                    <button type="button" onClick={() => setDeliveryType('domicile')} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${deliveryType === 'domicile' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'domicile' ? 'border-[#222355]' : 'border-slate-300'}`}>
                           {deliveryType === 'domicile' && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
@@ -406,8 +428,8 @@ export default function AlgerianWatchLandingPage() {
                         <span className="font-bold text-slate-900 text-sm">توصيل لباب المنزل</span>
                       </div>
                       <span className="font-black text-slate-600 text-sm">700 دج</span>
-                    </label>
-                    <label className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${deliveryType === 'desk' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
+                    </button>
+                    <button type="button" onClick={() => setDeliveryType('desk')} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${deliveryType === 'desk' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'desk' ? 'border-[#222355]' : 'border-slate-300'}`}>
                           {deliveryType === 'desk' && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
@@ -415,7 +437,7 @@ export default function AlgerianWatchLandingPage() {
                         <span className="font-bold text-slate-900 text-sm">استلام من مكتب التوصيل</span>
                       </div>
                       <span className="font-black text-slate-600 text-sm">500 دج</span>
-                    </label>
+                    </button>
                   </div>
                 </div>
 
@@ -429,6 +451,29 @@ export default function AlgerianWatchLandingPage() {
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
                     placeholder="اسم الحي أو الشارع"
                   />
+                </div>
+
+                {/* Model Selection Dropdown (Inside Form) */}
+                <div className="pt-2">
+                  <label htmlFor="modelSelectForm" className="block text-sm font-bold text-slate-900 mb-1.5">اختر الموديل (اللون) المطلوب <span className="text-[#DC2626]">*</span></label>
+                  <div className="relative">
+                    <select
+                      id="modelSelectForm"
+                      value={selectedModel.id}
+                      onChange={(e) => {
+                        const model = WATCH_MODELS.find(m => m.id === Number(e.target.value));
+                        if (model) setSelectedModel(model);
+                      }}
+                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"
+                    >
+                      {WATCH_MODELS.map(model => (
+                        <option key={model.id} value={model.id}>{model.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                      ▼
+                    </div>
+                  </div>
                 </div>
 
                 {/* Total Recap */}
