@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || '';
+export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || '613015005205444';
 
 /**
  * Standard Facebook Pixel event dispatcher
