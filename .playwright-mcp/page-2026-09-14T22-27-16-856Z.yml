@@ -1,0 +1,214 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary "تنبيه التوصيل" [ref=e3]:
+      - generic [ref=e4]: توصيل سريع لـ 58 ولاية • الدفع عند الاستلام بعد فتح ومعاينة الطرد والتأكد 100%
+    - banner [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: W
+          - generic [ref=e15]:
+            - generic [ref=e16]: MY WATCH الجزائر
+            - paragraph [ref=e17]: ساعة يد + خاتم وبراسلي مجاناً داخل علبة هدية
+        - button "اطلب بـ 1500 دج" [ref=e18] [cursor=pointer]
+    - main [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - generic [ref=e27]:
+              - generic [ref=e28]: عرض ترويجي خاص
+              - generic [ref=e32]: وفر 1500 دج (خصم 50%)
+            - heading "طقم ساعة يد رجالية + خاتم وبراسلي مجاناً داخل علبة" [level=1] [ref=e33]
+            - generic [ref=e34]:
+              - generic [ref=e35]: 1500 دج
+              - generic [ref=e36]: 3000 دج
+              - generic [ref=e37]: الدفع عند الاستلام
+            - generic [ref=e38]:
+              - generic [ref=e44]:
+                - strong [ref=e45]: ساعة كوارتز
+                - text: مقاومة للماء
+              - generic [ref=e49]:
+                - strong [ref=e50]: خاتم ستانلس
+                - text: متناسق
+              - generic [ref=e55]:
+                - strong [ref=e56]: براسلي كلاسيكي
+                - text: مجاناً
+              - generic [ref=e62]:
+                - strong [ref=e63]: علبة هدية
+                - text: مبطنة للإهداء
+            - paragraph [ref=e64]:
+              - text: 📌
+              - strong [ref=e65]: "ملاحظة هامة:"
+              - text: الصور بالأسفل مخصصة لاختيار موديل الساعة (1 إلى 10). الخاتم والبراسلي والعلبة ملحقة مجاناً مع كل ساعة تختارها.
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - generic [ref=e68]:
+                - generic [ref=e69]: "1"
+                - heading "اختر موديل الساعة (1 إلى 10)" [level=2] [ref=e70]
+              - generic [ref=e71]: يرجى تحديد الموديل
+            - generic [ref=e73]:
+              - img "الموديل 1" [ref=e74]
+              - generic [ref=e75]: الموديل 1
+            - generic [ref=e76]:
+              - button "الموديل 1 الموديل 1" [ref=e77] [cursor=pointer]:
+                - generic [ref=e78]: الموديل 1
+                - img "الموديل 1" [ref=e80]
+              - button "الموديل 2 الموديل 2" [ref=e81] [cursor=pointer]:
+                - generic [ref=e82]: الموديل 2
+                - img "الموديل 2" [ref=e84]
+              - button "الموديل 3 الموديل 3" [ref=e85] [cursor=pointer]:
+                - generic [ref=e86]: الموديل 3
+                - img "الموديل 3" [ref=e88]
+              - button "الموديل 4 الموديل 4" [ref=e89] [cursor=pointer]:
+                - generic [ref=e90]: الموديل 4
+                - img "الموديل 4" [ref=e92]
+              - button "الموديل 5 الموديل 5" [ref=e93] [cursor=pointer]:
+                - generic [ref=e94]: الموديل 5
+                - img "الموديل 5" [ref=e96]
+              - button "الموديل 6 الموديل 6" [ref=e97] [cursor=pointer]:
+                - generic [ref=e98]: الموديل 6
+                - img "الموديل 6" [ref=e100]
+              - button "الموديل 7 الموديل 7" [ref=e101] [cursor=pointer]:
+                - generic [ref=e102]: الموديل 7
+                - img "الموديل 7" [ref=e104]
+              - button "الموديل 8 الموديل 8" [ref=e105] [cursor=pointer]:
+                - generic [ref=e106]: الموديل 8
+                - img "الموديل 8" [ref=e108]
+              - button "الموديل 9 الموديل 9" [ref=e109] [cursor=pointer]:
+                - generic [ref=e110]: الموديل 9
+                - img "الموديل 9" [ref=e112]
+              - button "الموديل 10 الموديل 10" [ref=e113] [cursor=pointer]:
+                - generic [ref=e114]: الموديل 10
+                - img "الموديل 10" [ref=e116]
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - generic [ref=e124]: توصيل 58 ولاية
+              - generic [ref=e125]: لباب المنزل أو المكتب
+            - generic [ref=e126]:
+              - generic [ref=e130]: معاينة قبل الدفع
+              - generic [ref=e131]: افتح وتأكد من ساعتك
+            - generic [ref=e132]:
+              - generic [ref=e136]: ضمان الاستبدال
+              - generic [ref=e137]: في حال وجود أي عيب
+        - generic [ref=e139]:
+          - generic [ref=e140]:
+            - generic [ref=e141]: استمارة تأكيد الطلب
+            - heading "املأ معلوماتك أدناه لتسجيل طلبك" [level=2] [ref=e142]
+            - paragraph [ref=e143]: سنتصل بك هاتفياً لتأكيد الشحن • الدفع نقداً عند الاستلام
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - generic [ref=e146]: "الموديل المطلوب:"
+              - button "تغيير الموديل ↺" [ref=e147] [cursor=pointer]
+            - button "👈 اضغط هنا لاختيار الموديل أولاً (من 1 إلى 10)" [ref=e148] [cursor=pointer]
+          - generic [ref=e149]:
+            - generic [ref=e150]: "الكمية المطلوبة:"
+            - generic [ref=e151]:
+              - button "1 ساعة 1500 دج" [ref=e152] [cursor=pointer]:
+                - generic [ref=e153]: 1 ساعة
+                - generic [ref=e154]: 1500 دج
+              - button "2 ساعات 2800 دج توفير إضافي" [ref=e155] [cursor=pointer]:
+                - generic [ref=e156]: 2 ساعات
+                - generic [ref=e157]: 2800 دج
+                - generic [ref=e158]: توفير إضافي
+              - button "3 ساعات 3900 دج توفير إضافي" [ref=e159] [cursor=pointer]:
+                - generic [ref=e160]: 3 ساعات
+                - generic [ref=e161]: 3900 دج
+                - generic [ref=e162]: توفير إضافي
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - generic [ref=e165]: الاسم واللقب *
+              - textbox "الاسم واللقب *" [ref=e167]:
+                - /placeholder: "مثال: محمد بن علي"
+            - generic [ref=e168]:
+              - generic [ref=e169]: رقم الهاتف * (10 أرقام)
+              - textbox "رقم الهاتف * (10 أرقام)" [ref=e171]:
+                - /placeholder: 05 / 06 / 07 XX XX XX XX
+              - paragraph [ref=e172]: سنتصل بك هاتفياً لتأكيد الشحن
+            - generic [ref=e173]:
+              - generic [ref=e174]: الولاية * (58 ولاية)
+              - combobox "الولاية * (58 ولاية)" [ref=e176] [cursor=pointer]:
+                - option "-- اختر ولايتك من القائمة (58 ولاية) --" [selected]
+                - option "01 - أدرار (Adrar)"
+                - option "02 - الشلف (Chlef)"
+                - option "03 - الأغواط (Laghouat)"
+                - option "04 - أم البواقي (Oum El Bouaghi)"
+                - option "05 - باتنة (Batna)"
+                - option "06 - بجاية (Béjaïa)"
+                - option "07 - بسكرة (Biskra)"
+                - option "08 - بشار (Béchar)"
+                - option "09 - البليدة (Blida)"
+                - option "10 - البويرة (Bouira)"
+                - option "11 - تمنراست (Tamanrasset)"
+                - option "12 - تبسة (Tébessa)"
+                - option "13 - تلمسان (Tlemcen)"
+                - option "14 - تيارت (Tiaret)"
+                - option "15 - تيزي وزو (Tizi Ouzou)"
+                - option "16 - الجزائر (Alger)"
+                - option "17 - الجلفة (Djelfa)"
+                - option "18 - جيجل (Jijel)"
+                - option "19 - سطيف (Sétif)"
+                - option "20 - سعيدة (Saïda)"
+                - option "21 - سكيكدة (Skikda)"
+                - option "22 - سيدي بلعباس (Sidi Bel Abbès)"
+                - option "23 - عنابة (Annaba)"
+                - option "24 - قالمة (Guelma)"
+                - option "25 - قسنطينة (Constantine)"
+                - option "26 - المدية (Médéa)"
+                - option "27 - مستغانم (Mostaganem)"
+                - option "28 - المسيلة (M'Sila)"
+                - option "29 - معسكر (Mascara)"
+                - option "30 - ورقلة (Ouargla)"
+                - option "31 - وهران (Oran)"
+                - option "32 - البيض (El Bayadh)"
+                - option "33 - إليزي (Illizi)"
+                - option "34 - برج بوعريريج (Bordj Bou Arreridj)"
+                - option "35 - بومرداس (Boumerdès)"
+                - option "36 - الطارف (El Tarf)"
+                - option "37 - تندوف (Tindouf)"
+                - option "38 - تيسمسيلت (Tissemsilt)"
+                - option "39 - الوادي (El Oued)"
+                - option "40 - خنشلة (Khenchela)"
+                - option "41 - سوق أهراس (Souk Ahras)"
+                - option "42 - تيبازة (Tipaza)"
+                - option "43 - ميلة (Mila)"
+                - option "44 - عين الدفلى (Aïn Defla)"
+                - option "45 - النعامة (Naâma)"
+                - option "46 - عين تموشنت (Aïn Témouchent)"
+                - option "47 - غرداية (Ghardaïa)"
+                - option "48 - غليزان (Relizane)"
+                - option "49 - تيميمون (Timimoun)"
+                - option "50 - برج باجي مختار (Bordj Badji Mokhtar)"
+                - option "51 - أولاد جلال (Ouled Djellal)"
+                - option "52 - بني عباس (Beni Abbes)"
+                - option "53 - عين صالح (In Salah)"
+                - option "54 - عين قزام (In Guezzam)"
+                - option "55 - تقرت (Touggourt)"
+                - option "56 - جانت (Djanet)"
+                - option "57 - المغير (El M'Ghair)"
+                - option "58 - المنيعة (El Meniaa)"
+            - generic [ref=e177]:
+              - generic [ref=e178]:
+                - generic [ref=e179]: "ثمن الطقم (1 علبة):"
+                - generic [ref=e180]: 1500 دج
+              - generic [ref=e181]:
+                - generic [ref=e182]: "مصاريف التوصيل (لباب المنزل):"
+                - generic [ref=e183]: اختر الولاية والبلدية أولاً
+              - generic [ref=e184]:
+                - generic [ref=e185]: "إجمالي التوفير في العرض:"
+                - generic [ref=e186]: "-1500 دج"
+              - generic [ref=e187]:
+                - generic [ref=e188]: "المجموع للدفع عند الاستلام:"
+                - generic [ref=e189]: 1500 دج
+            - button "اضغط هنا لتأكيد الطلب الآن" [ref=e190] [cursor=pointer]
+            - generic [ref=e195]: 🔒 معلوماتك محمية ومحفوظة • نتصل بك هاتفياً لتأكيد الشحن قبل الإرسال
+    - generic [ref=e197]:
+      - generic [ref=e198]:
+        - generic [ref=e199]: "سعر الطقم:"
+        - generic [ref=e200]:
+          - generic [ref=e201]: 1500 دج
+          - generic [ref=e202]: 3000 دج
+      - button "اطلب الآن بـ 1500 دج" [ref=e203] [cursor=pointer]
+    - contentinfo [ref=e208]:
+      - generic [ref=e209]:
+        - paragraph [ref=e210]: MY WATCH الجزائر © 2026 - جميع الحقوق محفوظة
+        - paragraph [ref=e211]: طقم الساعات الرجالية • توصيل 58 ولاية • الدفع عند الاستلام بعد المعاينة والتأكد
+  - button "Open Next.js Dev Tools" [ref=e217] [cursor=pointer]
