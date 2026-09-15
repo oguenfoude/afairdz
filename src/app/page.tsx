@@ -518,17 +518,6 @@ export default function AlgerianWatchLandingPage() {
         </div>
       </main>
 
-      {/* Sticky Mobile Buy Button (Jumps to form) */}
-      <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-200 p-3 lg:hidden z-50">
-        <button
-          onClick={scrollToForm}
-          className="w-full py-3.5 bg-gradient-to-r from-[#DC2626] to-[#EF4444] text-white rounded-xl font-black text-lg shadow-[0_4px_20px_rgb(220,38,38,0.3)] flex items-center justify-center gap-2"
-        >
-          <ShoppingBag className="w-5 h-5 animate-pulse" />
-          اطلب الآن - الدفع عند الاستلام
-        </button>
-      </div>
-
     </div>
   );
 }
