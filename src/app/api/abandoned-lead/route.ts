@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
     const lastRecord = recentLeads.get(phone);
     const now = Date.now();
 
-    // If exact same summary was sent in the last 5 minutes, skip
-    if (lastRecord && lastRecord.summary === currentSummary && now - lastRecord.timestamp < 5 * 60 * 1000) {
-      return NextResponse.json({ skipped: true, reason: 'Already notified recently with same details' });
+    // If we already sent a notification for this phone number in the last 30 minutes, skip completely
+    if (lastRecord && now - lastRecord.timestamp < 30 * 60 * 1000) {
+      return NextResponse.json({ skipped: true, reason: 'Already notified recently for this phone number' });
     }
 
     recentLeads.set(phone, { timestamp: now, summary: currentSummary });
@@ -55,8 +55,9 @@ export async function POST(req: NextRequest) {
     ]);
 
     return NextResponse.json({ success: true, leadId: leadData.leadId });
-  } catch (error: any) {
-    console.error('Error logging abandoned lead:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const e = error as Error;
+    console.error('Error logging abandoned lead:', e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
