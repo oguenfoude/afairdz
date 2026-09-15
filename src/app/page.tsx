@@ -31,6 +31,18 @@ import {
 import { trackFBPixel } from '@/components/FacebookPixel';
 import { WATCH_MODELS, WatchModel, PACKAGE_OFFERS } from '@/data/products';
 
+interface OrderSuccessData {
+  orderId: string;
+  fullName: string;
+  phone: string;
+  wilayaName: string;
+  communeName: string;
+  deliveryType: string;
+  addressDetails?: string;
+  totalPrice: number;
+  selectedModels: { modelName: string; image: string; modelId: number }[];
+}
+
 export default function AlgerianWatchLandingPage() {
   // Step 1: Model Selection (1 to 10) - starts as null (no pre-selected)
   const [selectedModel, setSelectedModel] = useState<WatchModel | null>(null);
@@ -57,7 +69,7 @@ export default function AlgerianWatchLandingPage() {
   // UI States
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [orderSuccess, setOrderSuccess] = useState<any | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState<OrderSuccessData | null>(null);
 
   // References
   const formSectionRef = useRef<HTMLDivElement>(null);
@@ -73,11 +85,6 @@ export default function AlgerianWatchLandingPage() {
     ? getAllCommunesForWilaya(Number(wilayaId))
     : [];
 
-  // Reset commune when Wilaya changes
-  useEffect(() => {
-    setCommuneName('');
-  }, [wilayaId]);
-
   // Delivery Pricing: Home = 700 DZD, Desk = 500 DZD no matter what
   const domicileFee = 700;
   const deskFee = 500;
@@ -92,13 +99,6 @@ export default function AlgerianWatchLandingPage() {
   const hasLocation = Boolean(wilayaId && communeName);
 
   const cleanPhone = phone.trim().replace(/[\s\-]/g, '');
-  const isAllInfoFilled = Boolean(
-    fullName.trim().length >= 2 &&
-    cleanPhone.length >= 9 &&
-    wilayaId &&
-    communeName &&
-    (deliveryType === 'desk' || addressDetails.trim().length >= 2)
-  );
 
   // Real-time Lead Dispatcher
   const logCustomerData = (stage: string) => {
@@ -132,6 +132,7 @@ export default function AlgerianWatchLandingPage() {
   };
 
   // Debounced input tracking
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     if (phone.trim().length >= 9) {
@@ -254,8 +255,9 @@ export default function AlgerianWatchLandingPage() {
         spread: 70,
         origin: { y: 0.6 }
       });
-    } catch (err: any) {
-      setErrorMessage(err.message || 'حدث خطأ غير متوقع. يرجى المحاولة ثانية.');
+    } catch (err: unknown) {
+      const e = err as Error;
+      setErrorMessage(e.message || 'حدث خطأ غير متوقع. يرجى المحاولة ثانية.');
     } finally {
       setIsSubmitting(false);
     }
@@ -334,33 +336,25 @@ export default function AlgerianWatchLandingPage() {
                   <span className="text-sm text-slate-400 line-through">{originalPrice} دج</span>
                   <span className="text-xs text-slate-600 font-bold mr-auto">الدفع عند الاستلام</span>
                 </div>
-              ) : (
-                <div className="flex items-center justify-between gap-2.5 my-3 pb-3 border-b border-slate-100 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-900">
-                    <MapPin className="w-4 h-4 text-amber-600 shrink-0 animate-bounce" />
-                    <span>حدد ولايتك وبلديتك بالأسفل لعرض السعر النهائي</span>
-                  </div>
-                  <span className="text-[11px] text-slate-600 font-bold shrink-0">الدفع عند الاستلام</span>
-                </div>
-              )}
+              ) : null}
 
               {/* Clear Key Points (No walls of text) */}
               <div className="grid grid-cols-2 gap-2 text-xs text-slate-700">
                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-slate-50 border border-slate-200/80">
                   <Package className="w-4 h-4 text-[#222355] shrink-0" />
-                  <span><strong>ساعة كوارتز</strong> أنيقة</span>
+                  <span>ساعة كوارتز أنيقة</span>
                 </div>
                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-slate-50 border border-slate-200/80">
                   <Check className="w-4 h-4 text-[#222355] shrink-0" />
-                  <span><strong>خاتم ستانلس</strong> متناسق</span>
+                  <span>خاتم ستانلس متناسق</span>
                 </div>
                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-slate-50 border border-slate-200/80">
                   <Sparkles className="w-4 h-4 text-[#222355] shrink-0" />
-                  <span><strong>براسلي كلاسيكي</strong> هدية</span>
+                  <span>براسلي كلاسيكي هدية</span>
                 </div>
                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-slate-50 border border-slate-200/80">
                   <Gift className="w-4 h-4 text-[#222355] shrink-0" />
-                  <span><strong>علبة إهداء</strong> فاخرة</span>
+                  <span>علبة إهداء فاخرة</span>
                 </div>
               </div>
 
@@ -636,6 +630,7 @@ export default function AlgerianWatchLandingPage() {
                       onChange={(e) => {
                         const val = e.target.value ? Number(e.target.value) : '';
                         setWilayaId(val);
+                        setCommuneName('');
                       }}
                       onBlur={() => logCustomerData('input_blur')}
                       className="w-full pr-9 pl-8 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#222355] focus:border-transparent appearance-none cursor-pointer transition-all truncate"

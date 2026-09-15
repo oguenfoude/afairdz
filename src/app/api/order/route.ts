@@ -52,8 +52,9 @@ export async function POST(req: NextRequest) {
       orderId,
       message: 'تم تأكيد طلبك بنجاح! سنتصل بك هاتفياً في أقرب وقت لتأكيد الشحن.'
     });
-  } catch (error: any) {
-    console.error('Error submitting order:', error);
+  } catch (error: unknown) {
+    const e = error as Error;
+    console.error('Error submitting order:', e);
     return NextResponse.json(
       { error: 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.' },
       { status: 500 }
