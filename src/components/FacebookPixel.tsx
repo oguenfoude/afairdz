@@ -5,7 +5,9 @@ import Script from 'next/script';
 
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fbq?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fbq?: any;
   }
 }
@@ -15,6 +17,7 @@ export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || '6130150
 /**
  * Standard Facebook Pixel event dispatcher
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const trackFBPixel = (event: string, data?: Record<string, any>) => {
   if (typeof window !== 'undefined' && window.fbq) {
     if (data) {
@@ -71,6 +74,7 @@ export default function FacebookPixel() {
         }}
       />
       <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           height="1"
           width="1"

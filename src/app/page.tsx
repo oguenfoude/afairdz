@@ -132,7 +132,6 @@ export default function AlgerianWatchLandingPage() {
   };
 
   // Debounced input tracking
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     if (phone.trim().length >= 9) {
@@ -143,6 +142,7 @@ export default function AlgerianWatchLandingPage() {
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel]);
 
   const scrollToForm = () => {
