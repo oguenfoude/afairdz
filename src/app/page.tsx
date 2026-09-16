@@ -42,6 +42,16 @@ const setHasOrderedCookie = () => {
   }
 };
 
+const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
+  if (typeof window === 'undefined') return true;
+  const firedKey = `pixel_purchase_${orderId}`;
+  if (sessionStorage.getItem(firedKey) === 'true') {
+    return true;
+  }
+  sessionStorage.setItem(firedKey, 'true');
+  return false;
+};
+
 export default function AlgerianWatchLandingPage() {
   const [selectedModel, setSelectedModel] = useState<WatchModel>(WATCH_MODELS[0]);
 
@@ -285,19 +295,7 @@ export default function AlgerianWatchLandingPage() {
       // Fire Meta Pixel Purchase event EXACTLY ONCE for real, non-duplicate orders
       if (!data.isDuplicate && data.orderId) {
         const orderId = String(data.orderId);
-        const firedKey = `pixel_purchase_${orderId}`;
-        const isAlreadyFired = typeof window !== 'undefined' && (
-          sessionStorage.getItem(firedKey) === 'true' ||
-          (window.__fb_purchased_orders && window.__fb_purchased_orders.has(orderId))
-        );
-
-        if (!isAlreadyFired) {
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem(firedKey, 'true');
-            window.__fb_purchased_orders = window.__fb_purchased_orders || new Set();
-            window.__fb_purchased_orders.add(orderId);
-          }
-
+        if (!isPurchasePixelAlreadyFired(orderId)) {
           trackFBPixel(
             'Purchase',
             {

@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import Script from 'next/script';
 
 declare global {
@@ -9,7 +8,6 @@ declare global {
     fbq?: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fbq?: any;
-    __fb_purchased_orders?: Set<string>;
   }
 }
 
