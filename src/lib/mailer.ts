@@ -63,7 +63,7 @@ function getTransporter() {
   });
 }
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'oguenfoude@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kalijeogo@gmail.com, hama07102@gmail.com';
 const SENDER_EMAIL = process.env.EMAIL_FROM || `"Affaire DZ" <${process.env.SMTP_USER || 'noreply@afairdz.com'}>`;
 
 export async function sendOrderNotification(order: OrderData) {
