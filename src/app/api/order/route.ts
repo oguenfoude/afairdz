@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderNotification, OrderData } from '@/lib/mailer';
 import { syncOrderToGoogleSheet } from '@/lib/googleSheet';
 
+// In-memory cache for Rate Limiting / Anti-Spam
+const orderCache = new Map<string, number>();
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -11,6 +14,33 @@ export async function POST(req: NextRequest) {
         { error: 'يرجى إدخال الاسم الكامل، رقم الهاتف، والولاية.' },
         { status: 400 }
       );
+    }
+
+    // Anti-Spam Check
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const cleanPhone = body.phone.trim().replace(/[\s\-]/g, '');
+    const ipKey = `ip_${ip}`;
+    const phoneKey = `phone_${cleanPhone}`;
+    const now = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+
+    // Periodically clean cache to prevent memory leak on long-running instances
+    if (orderCache.size > 10000) {
+      orderCache.clear();
+    }
+
+    // Block if IP or Phone has ordered in the last 24 hours
+    if ((orderCache.has(ipKey) && (now - orderCache.get(ipKey)!) < twentyFourHours) ||
+        (orderCache.has(phoneKey) && (now - orderCache.get(phoneKey)!) < twentyFourHours)) {
+      
+      console.log(`[AntiSpam] Blocked duplicate order from IP: ${ip} | Phone: ${cleanPhone}`);
+      
+      // Return a FAKE success response so they stop spamming
+      return NextResponse.json({
+        success: true,
+        orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+        message: 'تم تأكيد طلبك بنجاح! لقد قمنا بتسجيل طلبك مسبقاً وسنتصل بك هاتفياً في أقرب وقت لتأكيد الشحن.'
+      });
     }
 
     const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
@@ -46,6 +76,10 @@ export async function POST(req: NextRequest) {
         console.error(`[Order Sync Error - Task ${index}]:`, result.reason);
       }
     });
+
+    // Record the successful order in the AntiSpam cache
+    if (ip !== 'unknown') orderCache.set(ipKey, now);
+    orderCache.set(phoneKey, now);
 
     return NextResponse.json({
       success: true,

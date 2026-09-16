@@ -89,6 +89,7 @@ export default function AlgerianWatchLandingPage() {
   const isOrderCompletedRef = useRef(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loggedLeadsRef = useRef<Set<string>>(new Set());
+  const hasFiredPixelRef = useRef(false);
 
   useEffect(() => {
     trackFBPixel('ViewContent', {
@@ -100,7 +101,8 @@ export default function AlgerianWatchLandingPage() {
 
   // Fire Purchase event ONLY when the Success Screen mounts
   useEffect(() => {
-    if (orderSuccess) {
+    if (orderSuccess && !hasFiredPixelRef.current) {
+      hasFiredPixelRef.current = true;
       trackFBPixel('Purchase', {
         value: orderSuccess.totalPrice,
         currency: 'DZD',
@@ -116,9 +118,10 @@ export default function AlgerianWatchLandingPage() {
 
   const currentWilaya = wilayaId ? getWilayaById(Number(wilayaId)) : undefined;
   const communesList: Commune[] = wilayaId ? getAllCommunesForWilaya(Number(wilayaId)) : [];
+  const currentCommune = communesList.find(c => c.commune_name === communeName);
 
-  const domicileFee = 700;
-  const deskFee = 500;
+  const domicileFee = currentCommune?.domicile?.fee_da ?? 700;
+  const deskFee = currentCommune?.stop_desk?.fee_da ?? 500;
   const currentDeliveryFee = deliveryType === 'desk' ? deskFee : domicileFee;
 
   const productPrice = 1500;
@@ -130,7 +133,7 @@ export default function AlgerianWatchLandingPage() {
 
   const logCustomerData = (stage: string) => {
     if (isOrderCompletedRef.current) return;
-    if (cleanPhone.length < 9) return;
+    if (cleanPhone.length < 9 || !fullName.trim() || !wilayaId || !communeName) return;
 
     const summary = `${cleanPhone}-${wilayaId}-${selectedModel.id}`;
     if (loggedLeadsRef.current.has(summary)) return;
@@ -162,13 +165,13 @@ export default function AlgerianWatchLandingPage() {
   useEffect(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     
-    const isFormFilledEnough = fullName.trim().length >= 2 && phone.trim().length >= 9;
+    const isFormFilledEnough = fullName.trim().length >= 2 && phone.trim().length >= 9 && Boolean(wilayaId && communeName);
 
     if (isFormFilledEnough && !isOrderCompletedRef.current) {
-      // 1. Idle Tracking (30 seconds of no typing)
+      // 1. Idle Tracking (60 seconds of no typing)
       idleTimerRef.current = setTimeout(() => {
         logCustomerData('idle_timeout');
-      }, 30000);
+      }, 60000);
     }
 
     // 2. Page Leave Tracking (Closing tab or navigating away)
@@ -204,6 +207,28 @@ export default function AlgerianWatchLandingPage() {
     if (!communeName) { setErrorMessage('يرجى اختيار البلدية.'); return; }
     if (!addressDetails.trim()) { setErrorMessage('يرجى كتابة العنوان بالتفصيل.'); return; }
 
+    if (typeof window !== 'undefined') {
+      if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
+        isOrderCompletedRef.current = true;
+        setOrderSuccess({ 
+          orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000), 
+          fullName: fullName.trim(),
+          phone: cleanPhone,
+          wilayaName: currentWilaya ? currentWilaya.wilaya_name : '',
+          communeName,
+          deliveryType,
+          addressDetails: addressDetails.trim(),
+          totalPrice,
+          selectedModels: [{
+            modelId: selectedModel.id,
+            modelName: selectedModel.name,
+            image: selectedModel.image
+          }]
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -236,6 +261,10 @@ export default function AlgerianWatchLandingPage() {
       if (!res.ok) throw new Error(data.error || 'حدث خطأ أثناء تسجيل الطلب.');
 
       isOrderCompletedRef.current = true;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hasOrdered', 'true');
+        document.cookie = "hasOrdered=true; max-age=86400; path=/";
+      }
       setOrderSuccess({ orderId: data.orderId, ...orderPayload });
     } catch (err: unknown) {
       const e = err as Error;
@@ -495,7 +524,18 @@ export default function AlgerianWatchLandingPage() {
                 <select
                   required
                   value={communeName}
-                  onChange={e => setCommuneName(e.target.value)}
+                  onChange={e => {
+                    const selected = e.target.value;
+                    setCommuneName(selected);
+                    const comm = communesList.find(c => c.commune_name === selected);
+                    if (comm) {
+                      if (deliveryType === 'domicile' && !comm.domicile.available && comm.stop_desk.available) {
+                        setDeliveryType('desk');
+                      } else if (deliveryType === 'desk' && !comm.stop_desk.available && comm.domicile.available) {
+                        setDeliveryType('domicile');
+                      }
+                    }
+                  }}
                   onBlur={() => logCustomerData('input_blur')}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
                 >
@@ -505,28 +545,37 @@ export default function AlgerianWatchLandingPage() {
               </div>
             )}
 
-            {hasLocation && (
+            {hasLocation && currentCommune && (
               <div className="animate-fade-in space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-900 mb-2">طريقة التوصيل <span className="text-[#DC2626]">*</span></label>
                   <div className="space-y-2">
-                    <button type="button" onClick={() => setDeliveryType('domicile')} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${deliveryType === 'domicile' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
+                    <button type="button" onClick={() => currentCommune.domicile.available && setDeliveryType('domicile')} disabled={!currentCommune.domicile.available} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${!currentCommune.domicile.available ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer'} ${deliveryType === 'domicile' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'domicile' ? 'border-[#222355]' : 'border-slate-300'}`}>
                           {deliveryType === 'domicile' && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
                         </div>
-                        <span className="font-bold text-slate-900 text-sm">توصيل لباب المنزل</span>
+                        <span className={`font-bold text-sm ${currentCommune.domicile.available ? 'text-slate-900' : 'text-slate-500'}`}>توصيل لباب المنزل</span>
                       </div>
-                      <span className="font-black text-slate-600 text-sm">700 دج</span>
+                      {currentCommune.domicile.available ? (
+                        <span className="font-black text-slate-600 text-sm">{currentCommune.domicile.fee_da} دج</span>
+                      ) : (
+                        <span className="font-bold text-red-500 text-xs bg-red-50 px-2 py-1 rounded-md">غير متوفر</span>
+                      )}
                     </button>
-                    <button type="button" onClick={() => setDeliveryType('desk')} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${deliveryType === 'desk' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
+
+                    <button type="button" onClick={() => currentCommune.stop_desk.available && setDeliveryType('desk')} disabled={!currentCommune.stop_desk.available} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${!currentCommune.stop_desk.available ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer'} ${deliveryType === 'desk' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'desk' ? 'border-[#222355]' : 'border-slate-300'}`}>
                           {deliveryType === 'desk' && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
                         </div>
-                        <span className="font-bold text-slate-900 text-sm">استلام من مكتب التوصيل</span>
+                        <span className={`font-bold text-sm ${currentCommune.stop_desk.available ? 'text-slate-900' : 'text-slate-500'}`}>استلام من مكتب التوصيل</span>
                       </div>
-                      <span className="font-black text-slate-600 text-sm">500 دج</span>
+                      {currentCommune.stop_desk.available ? (
+                        <span className="font-black text-slate-600 text-sm">{currentCommune.stop_desk.fee_da} دج</span>
+                      ) : (
+                        <span className="font-bold text-red-500 text-xs bg-red-50 px-2 py-1 rounded-md">غير متوفر</span>
+                      )}
                     </button>
                   </div>
                 </div>
