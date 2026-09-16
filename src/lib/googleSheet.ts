@@ -155,7 +155,7 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
         }
       });
       console.log('✅ [Google Sheet] Abandoned Lead synced to Abandoned tab');
-    } catch (tabError) {
+    } catch {
       // If the 'Abandoned' tab doesn't exist, gracefully fall back to the main sheet
       // Aligning exactly with the 14 columns of a real order to prevent mess
       await sheets.spreadsheets.values.append({

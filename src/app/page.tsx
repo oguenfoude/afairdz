@@ -34,6 +34,14 @@ interface OrderSuccessData {
   selectedModels: { modelName: string; image: string; modelId: number }[];
 }
 
+const generateOrderId = () => 'ORD-' + Date.now().toString().slice(-6);
+
+const setHasOrderedCookie = () => {
+  if (typeof document !== 'undefined') {
+    document.cookie = "hasOrdered=true; max-age=86400; path=/";
+  }
+};
+
 export default function AlgerianWatchLandingPage() {
   const [selectedModel, setSelectedModel] = useState<WatchModel>(WATCH_MODELS[0]);
 
@@ -158,7 +166,8 @@ export default function AlgerianWatchLandingPage() {
     fetch('/api/abandoned-lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      keepalive: true
     }).catch(() => {});
   };
 
@@ -181,21 +190,22 @@ export default function AlgerianWatchLandingPage() {
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && isFormFilledEnough && !isOrderCompletedRef.current) {
+        logCustomerData('tab_hidden');
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel]);
-
-  const scrollToForm = () => {
-    if (formSectionRef.current) {
-      const y = formSectionRef.current.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  };
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,7 +221,7 @@ export default function AlgerianWatchLandingPage() {
       if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
         isOrderCompletedRef.current = true;
         setOrderSuccess({ 
-          orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000), 
+          orderId: generateOrderId(), 
           fullName: fullName.trim(),
           phone: cleanPhone,
           wilayaName: currentWilaya ? currentWilaya.wilaya_name : '',
@@ -263,7 +273,7 @@ export default function AlgerianWatchLandingPage() {
       isOrderCompletedRef.current = true;
       if (typeof window !== 'undefined') {
         localStorage.setItem('hasOrdered', 'true');
-        document.cookie = "hasOrdered=true; max-age=86400; path=/";
+        setHasOrderedCookie();
       }
       setOrderSuccess({ orderId: data.orderId, ...orderPayload });
     } catch (err: unknown) {
