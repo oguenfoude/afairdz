@@ -9,18 +9,25 @@ declare global {
     fbq?: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fbq?: any;
+    __fb_purchased_orders?: Set<string>;
   }
 }
 
 export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || '613015005205444';
 
 /**
- * Standard Facebook Pixel event dispatcher
+ * Standard Facebook Pixel event dispatcher with eventID deduplication support
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const trackFBPixel = (event: string, data?: Record<string, any>) => {
+export const trackFBPixel = (
+  event: string, 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: Record<string, any>,
+  options?: { eventID?: string }
+) => {
   if (typeof window !== 'undefined' && window.fbq) {
-    if (data) {
+    if (data && options) {
+      window.fbq('track', event, data, options);
+    } else if (data) {
       window.fbq('track', event, data);
     } else {
       window.fbq('track', event);
@@ -29,12 +36,6 @@ export const trackFBPixel = (event: string, data?: Record<string, any>) => {
 };
 
 export default function FacebookPixel() {
-  useEffect(() => {
-    if (FB_PIXEL_ID) {
-      trackFBPixel('PageView');
-    }
-  }, []);
-
   if (!FB_PIXEL_ID) {
     // When no pixel ID is set yet, render a safe shim so window.fbq calls don't crash
     return (
@@ -68,6 +69,7 @@ export default function FacebookPixel() {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('set', 'autoConfig', false, '${FB_PIXEL_ID}');
             fbq('init', '${FB_PIXEL_ID}');
             fbq('track', 'PageView');
           `

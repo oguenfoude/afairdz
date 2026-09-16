@@ -35,9 +35,10 @@ export async function POST(req: NextRequest) {
       
       console.log(`[AntiSpam] Blocked duplicate order from IP: ${ip} | Phone: ${cleanPhone}`);
       
-      // Return a FAKE success response so they stop spamming
+      // Return a FAKE success response so they stop spamming, but flag as duplicate so pixel never fires
       return NextResponse.json({
         success: true,
+        isDuplicate: true,
         orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
         message: 'تم تأكيد طلبك بنجاح! لقد قمنا بتسجيل طلبك مسبقاً وسنتصل بك هاتفياً في أقرب وقت لتأكيد الشحن.'
       });

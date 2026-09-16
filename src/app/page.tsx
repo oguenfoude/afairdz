@@ -107,19 +107,10 @@ export default function AlgerianWatchLandingPage() {
     });
   }, []);
 
-  // Fire Purchase event ONLY when the Success Screen mounts
+  // Trigger confetti celebration when Success Screen mounts
   useEffect(() => {
     if (orderSuccess && !hasFiredPixelRef.current) {
       hasFiredPixelRef.current = true;
-      trackFBPixel('Purchase', {
-        value: orderSuccess.totalPrice,
-        currency: 'DZD',
-        content_type: 'product',
-        content_name: orderSuccess.selectedModels[0]?.modelName || 'Watch',
-        content_ids: [String(orderSuccess.selectedModels[0]?.modelId || 1)],
-        num_items: 1,
-        order_id: orderSuccess.orderId
-      });
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
     }
   }, [orderSuccess]);
@@ -290,6 +281,39 @@ export default function AlgerianWatchLandingPage() {
         localStorage.setItem('hasOrdered', 'true');
         setHasOrderedCookie();
       }
+
+      // Fire Meta Pixel Purchase event EXACTLY ONCE for real, non-duplicate orders
+      if (!data.isDuplicate && data.orderId) {
+        const orderId = String(data.orderId);
+        const firedKey = `pixel_purchase_${orderId}`;
+        const isAlreadyFired = typeof window !== 'undefined' && (
+          sessionStorage.getItem(firedKey) === 'true' ||
+          (window.__fb_purchased_orders && window.__fb_purchased_orders.has(orderId))
+        );
+
+        if (!isAlreadyFired) {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(firedKey, 'true');
+            window.__fb_purchased_orders = window.__fb_purchased_orders || new Set();
+            window.__fb_purchased_orders.add(orderId);
+          }
+
+          trackFBPixel(
+            'Purchase',
+            {
+              value: orderPayload.totalPrice,
+              currency: 'DZD',
+              content_type: 'product',
+              content_name: selectedModel.name,
+              content_ids: [String(selectedModel.id)],
+              num_items: 1,
+              order_id: orderId
+            },
+            { eventID: orderId } // Critical Meta Deduplication Key
+          );
+        }
+      }
+
       setOrderSuccess({ orderId: data.orderId, ...orderPayload });
     } catch (err: unknown) {
       const e = err as Error;
