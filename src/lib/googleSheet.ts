@@ -59,6 +59,7 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
   // 2. Google Sheets API Sync
   try {
     const modelNames = order.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
+    const formattedPhone = order.phone.startsWith('0') ? `'${order.phone}` : order.phone;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
       range: 'الطلبات المؤكدة!A:N',
@@ -69,7 +70,7 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
             order.orderId,
             order.createdAt,
             order.fullName,
-            order.phone,
+            formattedPhone,
             `${order.wilayaName} (${order.wilayaId})`,
             order.communeName,
             order.deliveryType === 'desk' ? 'استلام من المكتب' : 'توصيل للمنزل',
@@ -79,7 +80,7 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
             order.productPrice,
             order.deliveryFee,
             order.totalPrice,
-            order.notes || ''
+            order.notes || '⏳ قيد التأكيد'
           ]
         ]
       }
@@ -129,33 +130,33 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
   // 2. Google Sheets API Sync (Abandoned Leads)
   try {
     const modelNames = lead.selectedModels && lead.selectedModels.length > 0 ? lead.selectedModels.map(m => m.modelName).join(' + ') : 'غير محدد';
+    const formattedPhone = lead.phone && lead.phone.startsWith('0') ? `'${lead.phone}` : (lead.phone || '');
     
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'Abandoned!A:N',
+      range: 'السلات المتروكة!A:M',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
           [
             lead.leadId,
             lead.abandonedAt,
-            `[متروك] ${lead.fullName || 'بدون اسم'}`,
-            lead.phone,
+            lead.fullName || 'بدون اسم',
+            formattedPhone,
             lead.wilayaName || '',
             lead.communeName || '',
             lead.deliveryType === 'desk' ? 'استلام من المكتب' : (lead.deliveryType === 'domicile' ? 'توصيل للمنزل' : ''),
             lead.addressDetails || '---',
             modelNames,
             1,
-            '',
-            '',
-            lead.estimatedTotal || 0,
-            `لم يكمل الطلب (مرحلة: ${lead.stage})`
+            1500,
+            (lead.estimatedTotal && lead.estimatedTotal > 1500 ? lead.estimatedTotal - 1500 : 0),
+            lead.estimatedTotal || 0
           ]
         ]
       }
     });
-    console.log('✅ [Google Sheet] Abandoned Lead synced to Abandoned tab');
+    console.log('✅ [Google Sheet] Abandoned Lead synced to السلات المتروكة tab');
   } catch (err) {
     console.error('⚠️ [Google Sheet Leads Sync Error]', err);
   }
