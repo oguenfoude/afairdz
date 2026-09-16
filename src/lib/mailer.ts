@@ -38,7 +38,7 @@ export interface AbandonedLeadData {
   selectedModels?: OrderItem[];
   estimatedTotal?: number;
   abandonedAt: string;
-  stage: 'input_blur' | 'idle_timeout' | 'page_leave';
+  stage: 'idle_timeout' | 'page_leave' | 'tab_hidden' | string;
 }
 
 function getTransporter() {

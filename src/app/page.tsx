@@ -141,7 +141,16 @@ export default function AlgerianWatchLandingPage() {
 
   const logCustomerData = (stage: string) => {
     if (isOrderCompletedRef.current) return;
-    if (cleanPhone.length < 9 || !fullName.trim() || !wilayaId || !communeName) return;
+    if (stage === 'input_blur') return;
+
+    if (typeof window !== 'undefined') {
+      if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
+        return;
+      }
+    }
+
+    if (fullName.trim().length < 2 || !wilayaId || !communeName) return;
+    if (!/^(0)?(5|6|7)[0-9]{8}$/.test(cleanPhone)) return;
 
     const summary = `${cleanPhone}-${wilayaId}-${selectedModel.id}`;
     if (loggedLeadsRef.current.has(summary)) return;
@@ -174,10 +183,13 @@ export default function AlgerianWatchLandingPage() {
   useEffect(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     
-    const isFormFilledEnough = fullName.trim().length >= 2 && phone.trim().length >= 9 && Boolean(wilayaId && communeName);
+    const isFormFilledEnough = 
+      fullName.trim().length >= 2 && 
+      /^(0)?(5|6|7)[0-9]{8}$/.test(cleanPhone) && 
+      Boolean(wilayaId && communeName);
 
     if (isFormFilledEnough && !isOrderCompletedRef.current) {
-      // 1. Idle Tracking (60 seconds of no typing)
+      // 1. Idle Tracking (60 seconds of no action)
       idleTimerRef.current = setTimeout(() => {
         logCustomerData('idle_timeout');
       }, 60000);
@@ -217,9 +229,12 @@ export default function AlgerianWatchLandingPage() {
     if (!communeName) { setErrorMessage('يرجى اختيار البلدية.'); return; }
     if (!addressDetails.trim()) { setErrorMessage('يرجى كتابة العنوان بالتفصيل.'); return; }
 
+    // Lock abandoned lead tracking immediately upon real submission
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    isOrderCompletedRef.current = true;
+
     if (typeof window !== 'undefined') {
       if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
-        isOrderCompletedRef.current = true;
         setOrderSuccess({ 
           orderId: generateOrderId(), 
           fullName: fullName.trim(),
@@ -493,7 +508,6 @@ export default function AlgerianWatchLandingPage() {
                 required
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
-                onBlur={() => logCustomerData('input_blur')}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
                 placeholder="الاسم واللقب"
               />
@@ -508,7 +522,6 @@ export default function AlgerianWatchLandingPage() {
                 maxLength={10}
                 value={phone}
                 onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
-                onBlur={() => logCustomerData('input_blur')}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none text-right"
                 placeholder="05 / 06 / 07 XX XX XX XX"
               />
@@ -520,7 +533,6 @@ export default function AlgerianWatchLandingPage() {
                 required
                 value={wilayaId}
                 onChange={e => { setWilayaId(Number(e.target.value) || ''); setCommuneName(''); }}
-                onBlur={() => logCustomerData('input_blur')}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
               >
                 <option value="">-- اختر الولاية --</option>
@@ -546,7 +558,6 @@ export default function AlgerianWatchLandingPage() {
                       }
                     }
                   }}
-                  onBlur={() => logCustomerData('input_blur')}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
                 >
                   <option value="">-- اختر البلدية --</option>
