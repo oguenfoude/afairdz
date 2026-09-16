@@ -61,7 +61,7 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
     const modelNames = order.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'A:Z', // Appends to the first sheet
+      range: 'الطلبات المؤكدة!A:N',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
@@ -130,61 +130,32 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
   try {
     const modelNames = lead.selectedModels && lead.selectedModels.length > 0 ? lead.selectedModels.map(m => m.modelName).join(' + ') : 'غير محدد';
     
-    // First try to push to the 'Abandoned' tab if the user created it
-    try {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SHEET_SPREADSHEET_ID,
-        range: 'Abandoned!A:Z',
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-          values: [
-            [
-              lead.leadId,
-              lead.abandonedAt,
-              lead.fullName || 'غير محدد',
-              lead.phone,
-              lead.wilayaName || '',
-              lead.communeName || '',
-              lead.addressDetails || '',
-              lead.deliveryType === 'desk' ? 'استلام من المكتب' : (lead.deliveryType === 'domicile' ? 'توصيل للمنزل' : ''),
-              lead.estimatedTotal || 0,
-              modelNames,
-              lead.stage
-            ]
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_SPREADSHEET_ID,
+      range: 'Abandoned!A:N',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [
+          [
+            lead.leadId,
+            lead.abandonedAt,
+            `[متروك] ${lead.fullName || 'بدون اسم'}`,
+            lead.phone,
+            lead.wilayaName || '',
+            lead.communeName || '',
+            lead.deliveryType === 'desk' ? 'استلام من المكتب' : (lead.deliveryType === 'domicile' ? 'توصيل للمنزل' : ''),
+            lead.addressDetails || '---',
+            modelNames,
+            1,
+            '',
+            '',
+            lead.estimatedTotal || 0,
+            `لم يكمل الطلب (مرحلة: ${lead.stage})`
           ]
-        }
-      });
-      console.log('✅ [Google Sheet] Abandoned Lead synced to Abandoned tab');
-    } catch {
-      // If the 'Abandoned' tab doesn't exist, gracefully fall back to the main sheet
-      // Aligning exactly with the 14 columns of a real order to prevent mess
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: SHEET_SPREADSHEET_ID,
-        range: 'A:Z',
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-          values: [
-            [
-              lead.leadId,
-              lead.abandonedAt,
-              `[متروك] ${lead.fullName || 'بدون اسم'}`,
-              lead.phone,
-              lead.wilayaName || '',
-              lead.communeName || '',
-              lead.deliveryType === 'desk' ? 'استلام من المكتب' : (lead.deliveryType === 'domicile' ? 'توصيل للمنزل' : ''),
-              lead.addressDetails || '---',
-              modelNames,
-              1,
-              '',
-              '',
-              lead.estimatedTotal || 0,
-              `لم يكمل الطلب (مرحلة: ${lead.stage})`
-            ]
-          ]
-        }
-      });
-      console.log('✅ [Google Sheet] Abandoned Lead safely synced to main tab');
-    }
+        ]
+      }
+    });
+    console.log('✅ [Google Sheet] Abandoned Lead synced to Abandoned tab');
   } catch (err) {
     console.error('⚠️ [Google Sheet Leads Sync Error]', err);
   }
