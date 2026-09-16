@@ -88,6 +88,7 @@ export default function AlgerianWatchLandingPage() {
   const formSectionRef = useRef<HTMLDivElement>(null);
   const isOrderCompletedRef = useRef(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const loggedLeadsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     trackFBPixel('ViewContent', {
@@ -96,6 +97,22 @@ export default function AlgerianWatchLandingPage() {
       currency: 'DZD'
     });
   }, []);
+
+  // Fire Purchase event ONLY when the Success Screen mounts
+  useEffect(() => {
+    if (orderSuccess) {
+      trackFBPixel('Purchase', {
+        value: orderSuccess.totalPrice,
+        currency: 'DZD',
+        content_type: 'product',
+        content_name: orderSuccess.selectedModels[0]?.modelName || 'Watch',
+        content_ids: [String(orderSuccess.selectedModels[0]?.modelId || 1)],
+        num_items: 1,
+        order_id: orderSuccess.orderId
+      });
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+    }
+  }, [orderSuccess]);
 
   const currentWilaya = wilayaId ? getWilayaById(Number(wilayaId)) : undefined;
   const communesList: Commune[] = wilayaId ? getAllCommunesForWilaya(Number(wilayaId)) : [];
@@ -115,12 +132,17 @@ export default function AlgerianWatchLandingPage() {
     if (isOrderCompletedRef.current) return;
     if (cleanPhone.length < 9) return;
 
+    const summary = `${cleanPhone}-${wilayaId}-${selectedModel.id}`;
+    if (loggedLeadsRef.current.has(summary)) return;
+    loggedLeadsRef.current.add(summary);
+
     const payload = {
       fullName: fullName.trim(),
       phone: cleanPhone,
       wilayaName: currentWilaya ? currentWilaya.wilaya_name : '',
       communeName: communeName || '',
       deliveryType,
+      addressDetails: addressDetails.trim(),
       selectedModels: [{
         modelId: selectedModel.id,
         modelName: selectedModel.name,
@@ -139,13 +161,28 @@ export default function AlgerianWatchLandingPage() {
 
   useEffect(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    if (phone.trim().length >= 9) {
+    
+    const isFormFilledEnough = fullName.trim().length >= 2 && phone.trim().length >= 9;
+
+    if (isFormFilledEnough && !isOrderCompletedRef.current) {
+      // 1. Idle Tracking (30 seconds of no typing)
       idleTimerRef.current = setTimeout(() => {
         logCustomerData('idle_timeout');
-      }, 15000);
+      }, 30000);
     }
+
+    // 2. Page Leave Tracking (Closing tab or navigating away)
+    const handleBeforeUnload = () => {
+      if (isFormFilledEnough && !isOrderCompletedRef.current) {
+        logCustomerData('page_leave');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel]);
@@ -199,15 +236,7 @@ export default function AlgerianWatchLandingPage() {
       if (!res.ok) throw new Error(data.error || 'حدث خطأ أثناء تسجيل الطلب.');
 
       isOrderCompletedRef.current = true;
-      trackFBPixel('Purchase', {
-        value: totalPrice,
-        currency: 'DZD',
-        content_name: selectedModel.name,
-        order_id: data.orderId
-      });
       setOrderSuccess({ orderId: data.orderId, ...orderPayload });
-
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
     } catch (err: unknown) {
       const e = err as Error;
       setErrorMessage(e.message || 'حدث خطأ غير متوقع.');
@@ -232,7 +261,7 @@ export default function AlgerianWatchLandingPage() {
             {/* Product Details */}
             <div className="flex gap-4 items-center bg-white p-3 rounded-xl border border-slate-100 mb-4 shadow-sm">
               <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
-                <Image src={orderSuccess.selectedModels[0]?.image || '/logo.png'} alt="Product" fill className="object-contain p-1" />
+                <Image src={orderSuccess.selectedModels[0]?.image || '/logo.png'} alt="Product" fill sizes="64px" className="object-contain p-1" />
               </div>
               <div>
                 <p className="font-bold text-sm text-[#222355] mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>

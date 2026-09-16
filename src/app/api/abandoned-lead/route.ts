@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       wilayaName: body.wilayaName || '',
       communeName: body.communeName || '',
       deliveryType: body.deliveryType,
+      addressDetails: (body.addressDetails || '').trim(),
       selectedModels: body.selectedModels || [],
       estimatedTotal: body.estimatedTotal,
       abandonedAt: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Algiers' }),

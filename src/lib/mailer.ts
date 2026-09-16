@@ -34,6 +34,7 @@ export interface AbandonedLeadData {
   wilayaName?: string;
   communeName?: string;
   deliveryType?: 'desk' | 'domicile';
+  addressDetails?: string;
   selectedModels?: OrderItem[];
   estimatedTotal?: number;
   abandonedAt: string;
@@ -233,6 +234,56 @@ export async function sendOrderNotification(order: OrderData) {
 }
 
 export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
+  const attachments: Array<{ filename: string; path: string; cid?: string }> = [];
+
+  // 1. Attach Brand Logo
+  const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+  let hasLogo = false;
+  if (fs.existsSync(logoPath)) {
+    hasLogo = true;
+    attachments.push({ filename: 'logo.png', path: logoPath, cid: 'brand_logo' });
+  }
+
+  // 2. Attach Selected Watch Model Images for Gmail display
+  let modelsHtml = '';
+  if (lead.selectedModels && lead.selectedModels.length > 0) {
+    const rowsHtml = lead.selectedModels.map((m, idx) => {
+      let imgHtml = '';
+      if (m.image) {
+        const cleanImgRel = m.image.replace(/^\//, '');
+        const fullImgPath = path.join(process.cwd(), 'public', cleanImgRel);
+        if (fs.existsSync(fullImgPath)) {
+          const cidKey = `lead_model_img_${idx}`;
+          attachments.push({
+            filename: `${m.modelName.replace(/[\s\/]/g, '_')}_${m.modelId}.webp`,
+            path: fullImgPath,
+            cid: cidKey
+          });
+          imgHtml = `<img src="cid:${cidKey}" alt="${m.modelName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; display: block;" />`;
+        }
+      }
+
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 12px; width: 90px; text-align: center; vertical-align: middle;">
+            ${imgHtml || '<span style="font-size: 11px; color: #94a3b8;">صورة</span>'}
+          </td>
+          <td style="padding: 12px; text-align: right; vertical-align: middle;">
+            <div style="font-size: 15px; font-weight: 800; color: #1e1b4b; margin-bottom: 4px;">${m.modelName}</div>
+            <div style="font-size: 12px; color: #64748b;">موديل رقم #${m.modelId} • اختاره العميل قبل المغادرة</div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    modelsHtml = `
+      <div style="font-size: 18px; color: #1e1b4b; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; margin-top: 25px; display: flex; align-items: center;">📦 الموديل الذي كان يود شراءه:</div>
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: white;">
+        ${rowsHtml}
+      </table>
+    `;
+  }
+
   const html = `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
@@ -243,6 +294,7 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #f3f4f6; margin: 0; padding: 40px 20px; color: #1f2937; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
         .header { background-color: #fef2f2; padding: 25px 20px; text-align: center; border-bottom: 4px solid #ef4444; }
+        .header img { max-height: 50px; margin-bottom: 15px; }
         .badge { background-color: #ef4444; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; display: inline-block; margin-bottom: 12px; }
         .header h2 { color: #991b1b; margin: 0; font-size: 20px; font-weight: 800; line-height: 1.4; }
         .content { padding: 30px; }
@@ -258,7 +310,8 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
     <body>
       <div class="container">
         <div class="header">
-          <div class="badge">⚠️ طلب غير مكتمل (متروك)</div>
+          ${hasLogo ? '<img src="cid:brand_logo" alt="Affaire DZ" />' : ''}
+          <div><div class="badge">⚠️ طلب غير مكتمل (متروك)</div></div>
           <h2>عميل مهتم بدأ بتسجيل معلوماته ولم يكمل الطلب</h2>
         </div>
         
@@ -268,9 +321,10 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
           </div>
 
           <div class="desc">
-            <strong>فرصة مبيعات!</strong> بدأ هذا الزائر بكتابة رقم هاتفه في الموقع ولكنه توقف أو غادر قبل تأكيد الطلب. اتصل به الآن لمساعدته وإتمام الطلب.
+            <strong>فرصة مبيعات!</strong> بدأ هذا الزائر باختيار المنتج وكتابة معلوماته ولكنه توقف أو غادر قبل تأكيد الطلب. اتصل به الآن لإتمام الطلب.
           </div>
 
+          <div style="font-size: 18px; color: #1e1b4b; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; display: flex; align-items: center;">👤 ما كتبه العميل:</div>
           <table class="info-table">
             <tr>
               <th>الاسم</th>
@@ -282,11 +336,15 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
             </tr>
             ${lead.wilayaName ? `<tr><th>الولاية</th><td>${lead.wilayaName}</td></tr>` : ''}
             ${lead.communeName ? `<tr><th>البلدية</th><td>${lead.communeName}</td></tr>` : ''}
-            ${lead.deliveryType ? `<tr><th>التوصيل</th><td>${lead.deliveryType === 'desk' ? 'المكتب' : 'المنزل'}</td></tr>` : ''}
-            ${lead.estimatedTotal ? `<tr><th>المبلغ المتوقع</th><td style="color:#047857; font-weight:700;" dir="ltr">${lead.estimatedTotal} دج</td></tr>` : ''}
+            ${lead.deliveryType ? `<tr><th>التوصيل</th><td>${lead.deliveryType === 'desk' ? 'استلام من المكتب' : 'توصيل لباب المنزل'}</td></tr>` : ''}
+            ${lead.addressDetails ? `<tr><th>العنوان التفصيلي</th><td>${lead.addressDetails}</td></tr>` : ''}
+            ${lead.estimatedTotal ? `<tr><th>المبلغ التقديري</th><td style="color:#dc2626; font-weight:800;" dir="ltr">${lead.estimatedTotal} دج</td></tr>` : ''}
           </table>
 
-          <a href="tel:${lead.phone}" class="btn">📞 اتصل بالعميل الآن لاسترجاع الطلب</a>
+          ${modelsHtml}
+
+          <a href="tel:${lead.phone}" class="btn">📞 اضغط هنا للاتصال بالعميل وإتمام الطلب</a>
+          <a href="https://wa.me/213${lead.phone.replace(/^0/, '')}" class="btn" style="background-color: #25D366; color: #ffffff; margin-top: 10px; box-shadow: 0 4px 6px -1px rgba(37, 211, 102, 0.2);">💬 تواصل معه عبر الواتساب</a>
         </div>
         
         <div class="footer">
@@ -307,8 +365,9 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
   const mailOptions = {
     from: SENDER_EMAIL,
     to: ADMIN_EMAIL,
-    subject: `⚠️ [طلب متروك] عميل محتمل: ${lead.fullName || 'بدون اسم'} - ${lead.phone}`,
-    html
+    subject: `⚠️ [طلب متروك] ${lead.fullName || 'بدون اسم'} - ${lead.wilayaName || ''} - ${lead.phone}`,
+    html,
+    attachments
   };
 
   return await transporter.sendMail(mailOptions);
