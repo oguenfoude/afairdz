@@ -200,8 +200,8 @@ export default function AlgerianWatchLandingPage() {
 
       isOrderCompletedRef.current = true;
       trackFBPixel('Purchase', {
-        value: totalPrice / 100,
-        currency: 'USD',
+        value: totalPrice,
+        currency: 'DZD',
         content_name: selectedModel.name,
         order_id: data.orderId
       });
@@ -218,18 +218,56 @@ export default function AlgerianWatchLandingPage() {
 
   if (orderSuccess) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4" dir="rtl">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center border-t-8 border-[#222355]">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12" dir="rtl">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 sm:p-8 text-center border-t-8 border-[#222355]">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
           <h1 className="text-2xl font-black text-slate-900 mb-2">تم تأكيد طلبك بنجاح!</h1>
-          <p className="text-slate-600 mb-6">رقم الطلب: <span className="font-bold text-[#222355]">{orderSuccess.orderId}</span></p>
-          <div className="bg-slate-50 rounded-xl p-4 mb-6 text-right space-y-3">
-            <p className="text-sm border-b border-slate-200 pb-2">سنتصل بك قريباً على الرقم <strong className="text-[#222355] block text-base mt-1" dir="ltr">{orderSuccess.phone}</strong></p>
-            <p className="text-sm text-slate-700">المبلغ الإجمالي للدفع عند الاستلام: <strong className="text-[#DC2626] text-lg block">{orderSuccess.totalPrice} دج</strong></p>
+          <p className="text-slate-500 mb-6 text-sm">رقم الطلب: <span className="font-bold text-slate-700">{orderSuccess.orderId}</span></p>
+          
+          <div className="bg-slate-50 rounded-xl p-4 mb-4 text-right border border-slate-100">
+            <h3 className="font-black text-slate-800 border-b border-slate-200 pb-2 mb-3">تفاصيل الطلب:</h3>
+            
+            {/* Product Details */}
+            <div className="flex gap-4 items-center bg-white p-3 rounded-xl border border-slate-100 mb-4 shadow-sm">
+              <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
+                <Image src={orderSuccess.selectedModels[0]?.image || '/logo.png'} alt="Product" fill className="object-contain p-1" />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-[#222355] mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
+                <p className="text-xs font-bold text-slate-500">الكمية: 1 • الدفع عند الاستلام</p>
+              </div>
+            </div>
+
+            {/* Customer Details */}
+            <div className="text-sm text-slate-700 space-y-2.5">
+              <p className="flex justify-between border-b border-slate-100 pb-1.5">
+                <span className="text-slate-500">الاسم:</span> 
+                <strong className="text-slate-900">{orderSuccess.fullName}</strong>
+              </p>
+              <p className="flex justify-between border-b border-slate-100 pb-1.5">
+                <span className="text-slate-500">الهاتف:</span> 
+                <strong className="text-[#222355] font-black" dir="ltr">{orderSuccess.phone}</strong>
+              </p>
+              <p className="flex justify-between border-b border-slate-100 pb-1.5">
+                <span className="text-slate-500">العنوان:</span> 
+                <strong className="text-slate-900">{orderSuccess.wilayaName}، {orderSuccess.communeName}</strong>
+              </p>
+              <p className="flex justify-between pt-1">
+                <span className="font-bold text-slate-800">المبلغ الإجمالي:</span> 
+                <span className="font-black text-[#DC2626] text-lg">{orderSuccess.totalPrice} دج</span>
+              </p>
+            </div>
           </div>
-          <button onClick={() => window.location.reload()} className="w-full py-3.5 bg-[#222355] text-white rounded-xl font-bold">العودة للرئيسية</button>
+
+          <div className="bg-green-50 text-green-800 rounded-xl p-4 mb-6 text-sm font-bold border border-green-200 leading-relaxed shadow-sm">
+            شكرًا لثقتك بنا! 🎉<br/>سيتصل بك فريقنا قريباً جداً على رقم هاتفك لتأكيد الطلب وشحنه إليك.
+          </div>
+
+          <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#222355] hover:bg-[#1a1b40] text-white rounded-xl font-bold shadow-md transition-all active:scale-95">
+            العودة للرئيسية
+          </button>
         </div>
       </div>
     );
