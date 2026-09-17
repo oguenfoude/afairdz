@@ -365,10 +365,13 @@ export default function AlgerianWatchLandingPage() {
                 onClick={() => setSelectedModel(model)}
                 type="button"
                 className={`relative w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 snap-start bg-slate-50 transition-all ${
-                  selectedModel.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-60'
+                  selectedModel.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-70'
                 }`}
               >
                 <Image src={model.image} alt={model.name} fill sizes="64px" className="object-cover p-1" />
+                <span className="absolute bottom-0 inset-x-0 bg-[#222355]/85 text-white text-[10px] font-bold py-0.5 text-center leading-tight">
+                  {model.name}
+                </span>
               </button>
             ))}
           </div>

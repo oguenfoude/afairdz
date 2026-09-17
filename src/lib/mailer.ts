@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
 
@@ -41,62 +41,89 @@ export interface AbandonedLeadData {
   stage: 'idle_timeout' | 'page_leave' | 'tab_hidden' | string;
 }
 
+let cachedTransporter: Transporter | null = null;
+
 function getTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '465', 10);
-  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+  if (cachedTransporter) return cachedTransporter;
+
   const user = process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'oguenfoude@gmail.com';
   const pass = process.env.GOOGLE_APP_PASSWORD || process.env.SMTP_PASS || 'qffh illr yauh duwb';
 
-  return nodemailer.createTransport({
+  // For Gmail (default), service: 'gmail' is natively optimized for serverless environments (handles TLS/ports/DNS automatically)
+  if (!process.env.SMTP_HOST || process.env.SMTP_HOST.includes('gmail.com')) {
+    cachedTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000
+    });
+    return cachedTransporter;
+  }
+
+  // Custom SMTP host if explicitly defined in env
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || '465', 10);
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+
+  cachedTransporter = nodemailer.createTransport({
     host,
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 7000,
-    greetingTimeout: 7000,
-    socketTimeout: 10000,
-    tls: {
-      rejectUnauthorized: false
-    }
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+    tls: { rejectUnauthorized: false }
   });
+
+  return cachedTransporter;
 }
 
-// Hardcoded direct recipients so no Vercel env configuration is required
-const ADMIN_EMAIL = 'kalijeogo@gmail.com, hama07102@gmail.com';
-const SENDER_EMAIL = '"Affaire DZ" <oguenfoude@gmail.com>';
+// Single admin recipient: kalijeogo@gmail.com strictly as requested
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kalijeogo@gmail.com';
+const SENDER_EMAIL = process.env.EMAIL_FROM || '"Affaire DZ" <oguenfoude@gmail.com>';
 
 export async function sendOrderNotification(order: OrderData) {
   const deliveryTypeLabel = order.deliveryType === 'desk' ? 'استلام من المكتب (500 دج)' : 'توصيل لباب المنزل (700 دج)';
   const attachments: Array<{ filename: string; path: string; cid?: string }> = [];
 
   // 1. Attach Brand Logo if exists
-  const logoPath = path.join(process.cwd(), 'public', 'logo.png');
-  let hasLogo = false;
-  if (fs.existsSync(logoPath)) {
-    hasLogo = true;
-    attachments.push({
-      filename: 'logo.png',
-      path: logoPath,
-      cid: 'brand_logo'
-    });
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+    if (fs.existsSync(logoPath)) {
+      attachments.push({
+        filename: 'logo.png',
+        path: logoPath,
+        cid: 'brand_logo'
+      });
+    }
+  } catch (e) {
+    console.warn('⚠️ Could not attach logo:', e);
   }
 
   // 2. Attach Selected Watch Model Images for Gmail display
   const modelsHtml = order.selectedModels.map((m, idx) => {
     let imgHtml = '';
-    if (m.image) {
-      const cleanImgRel = m.image.replace(/^\//, '');
-      const fullImgPath = path.join(process.cwd(), 'public', cleanImgRel);
-      if (fs.existsSync(fullImgPath)) {
-        const cidKey = `model_image_${idx}`;
-        attachments.push({
-          filename: `${m.modelName.replace(/[\s\/]/g, '_')}_${m.modelId}.webp`,
-          path: fullImgPath,
-          cid: cidKey
-        });
-        imgHtml = `<img src="cid:${cidKey}" alt="${m.modelName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; display: block;" />`;
+    try {
+      if (m.image) {
+        const cleanImgRel = m.image.replace(/^\//, '');
+        const fullImgPath = path.join(process.cwd(), 'public', cleanImgRel);
+        if (fs.existsSync(fullImgPath)) {
+          const cidKey = `model_image_${idx}`;
+          attachments.push({
+            filename: `${m.modelName.replace(/[\s\/]/g, '_')}_${m.modelId}.webp`,
+            path: fullImgPath,
+            cid: cidKey
+          });
+          imgHtml = `<img src="cid:${cidKey}" alt="${m.modelName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; display: block;" />`;
+        }
       }
+    } catch (imgErr) {
+      console.warn('⚠️ Could not attach model image:', imgErr);
     }
 
     return `
@@ -122,7 +149,6 @@ export async function sendOrderNotification(order: OrderData) {
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #f3f4f6; margin: 0; padding: 40px 20px; color: #1f2937; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
         .header { background-color: #1e1b4b; padding: 30px 20px; text-align: center; border-bottom: 4px solid #dc2626; }
-        .header img { max-height: 60px; margin-bottom: 15px; }
         .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
         .badge { background-color: #10b981; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; display: inline-block; margin-top: 10px; }
         .content { padding: 30px; }
@@ -131,22 +157,20 @@ export async function sendOrderNotification(order: OrderData) {
         .info-table th { width: 35%; padding: 12px 15px; background-color: #f8fafc; color: #475569; font-weight: 600; text-align: right; border: 1px solid #e2e8f0; font-size: 14px; }
         .info-table td { padding: 12px 15px; border: 1px solid #e2e8f0; font-size: 15px; color: #1e293b; font-weight: 500; }
         .phone-link { color: #dc2626; font-weight: 700; text-decoration: none; font-size: 16px; display: inline-flex; align-items: center; gap: 5px; }
-        .items-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
-        .items-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; background: #ffffff; }
-        .items-table tr:last-child td { border-bottom: none; }
         .summary-box { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 10px; padding: 20px; margin-top: 10px; border: 1px solid #cbd5e1; }
         .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 15px; color: #475569; }
         .summary-row.total { font-size: 22px; font-weight: 800; color: #1e1b4b; margin-top: 15px; padding-top: 15px; border-top: 2px dashed #cbd5e1; margin-bottom: 0; }
         .footer { text-align: center; padding: 20px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; }
         .btn { display: block; width: 100%; box-sizing: border-box; text-align: center; background-color: #2563eb; color: #ffffff; padding: 16px 20px; text-decoration: none; font-size: 18px; font-weight: 700; border-radius: 8px; margin-top: 25px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          ${hasLogo ? '<img src="cid:brand_logo" alt="Affaire DZ" />' : '<h2 style="color:white; margin:0; margin-bottom: 10px; font-size: 28px;">Affaire DZ</h2>'}
-          <h1>طلب شراء جديد #${order.orderId}</h1>
-          <div class="badge">تم تأكيد الطلب بنجاح ✅</div>
+          <h2 style="color:white; margin:0; margin-bottom: 10px; font-size: 28px;">Affaire DZ</h2>
+          <h1>طلب شراء جديد مؤكد ✅</h1>
+          <div class="badge">رقم الطلب: ${order.orderId}</div>
         </div>
         
         <div class="content">
@@ -216,12 +240,6 @@ export async function sendOrderNotification(order: OrderData) {
   `;
 
   const transporter = getTransporter();
-  if (!transporter) {
-    console.log('⚠️ [SMTP Notice] SMTP not configured. Order payload logged:');
-    console.log(JSON.stringify(order, null, 2));
-    return { success: true, simulated: true };
-  }
-
   const mailOptions = {
     from: SENDER_EMAIL,
     to: ADMIN_EMAIL,
