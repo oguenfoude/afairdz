@@ -574,7 +574,11 @@ export default function AlgerianWatchLandingPage() {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
                 >
                   <option value="">-- اختر البلدية --</option>
-                  {communesList.map(c => <option key={c.commune_id} value={c.commune_name}>{c.commune_name}</option>)}
+                  {communesList.map(c => (
+                    <option key={c.commune_id} value={c.commune_name}>
+                      {c.commune_name} {c.stop_desk.available ? '(متوفر مكتب توصيل)' : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
