@@ -308,7 +308,7 @@ export default function AlgerianWatchLandingPage() {
             'Purchase',
             {
               value: orderPayload.totalPrice,
-              currency: 'DZD',
+              currency: process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_CURRENCY || 'USD',
               content_type: 'product',
               content_name: selectedModel.name,
               content_ids: [String(selectedModel.id)],
@@ -455,6 +455,7 @@ export default function AlgerianWatchLandingPage() {
             fill
             sizes="(max-width: 768px) 100vw, 800px"
             priority
+            loading="eager"
             className="object-contain"
           />
         </div>
