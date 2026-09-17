@@ -19,33 +19,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Anti-Spam Check
-    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    // Anti-Spam: prevent rapid double-clicks for the same phone number within 60 seconds
     const cleanPhone = body.phone.trim().replace(/[\s\-]/g, '');
-    const ipKey = `ip_${ip}`;
     const phoneKey = `phone_${cleanPhone}`;
     const now = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const cooldownMs = 60 * 1000; // 60 seconds cooldown
 
-    // Periodically clean cache to prevent memory leak on long-running instances
+    // Clean cache if large
     if (orderCache.size > 10000) {
       orderCache.clear();
     }
 
-    // Block if IP or Phone has ordered in the last 24 hours
-    if ((orderCache.has(ipKey) && (now - orderCache.get(ipKey)!) < twentyFourHours) ||
-        (orderCache.has(phoneKey) && (now - orderCache.get(phoneKey)!) < twentyFourHours)) {
-      
-      console.log(`[AntiSpam] Blocked duplicate order from IP: ${ip} | Phone: ${cleanPhone}`);
-      
-      // Return a FAKE success response so they stop spamming, but flag as duplicate so pixel never fires
+    if (orderCache.has(phoneKey) && (now - orderCache.get(phoneKey)!) < cooldownMs) {
+      console.log(`[AntiSpam] Duplicate order prevented for Phone: ${cleanPhone}`);
       return NextResponse.json({
         success: true,
         isDuplicate: true,
         orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
-        message: 'تم تأكيد طلبك بنجاح! لقد قمنا بتسجيل طلبك مسبقاً وسنتصل بك هاتفياً في أقرب وقت لتأكيد الشحن.'
+        message: 'تم تأكيد طلبك بنجاح! لقد قمنا بتسجيل طلبك وسنتصل بك هاتفياً لتأكيد الشحن.'
       });
     }
+
+    orderCache.set(phoneKey, now);
 
     const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
     const createdAt = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Algiers' });
@@ -110,7 +105,6 @@ export async function POST(req: NextRequest) {
     await updateOrderEmailStatus(orderData.orderId, finalEmailStatus, sheetSyncResult?.rowNumber);
 
     // Record the successful order in the AntiSpam cache
-    if (ip !== 'unknown') orderCache.set(ipKey, now);
     orderCache.set(phoneKey, now);
 
     return NextResponse.json({

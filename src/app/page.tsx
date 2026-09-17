@@ -243,27 +243,6 @@ export default function AlgerianWatchLandingPage() {
     if (!addressDetails.trim()) { setErrorMessage('يرجى كتابة العنوان بالتفصيل.'); return; }
 
 
-    if (typeof window !== 'undefined') {
-      if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
-        setOrderSuccess({ 
-          orderId: generateOrderId(), 
-          fullName: fullName.trim(),
-          phone: cleanPhone,
-          wilayaName: currentWilaya ? currentWilaya.wilaya_name : '',
-          communeName,
-          deliveryType,
-          addressDetails: addressDetails.trim(),
-          totalPrice,
-          selectedModels: [{
-            modelId: selectedModel.id,
-            modelName: selectedModel.name,
-            image: selectedModel.image
-          }]
-        });
-        return;
-      }
-    }
-
     setIsSubmitting(true);
 
     try {
