@@ -16,9 +16,12 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: 'v4', auth });
 
 /**
- * Google Sheets and Local CSV Data Sync for Affaire DZ
+ * Step 1: Store order directly into Google Sheet & Local CSV BEFORE sending email.
+ * Returns the exact row number in Google Sheets so the email status can be updated immediately after delivery.
  */
-export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
+export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ success: boolean; rowNumber?: number }> {
+  let rowNumber: number | undefined;
+
   // 1. Local CSV Backup to ensure zero data loss
   try {
     const dataDir = path.join(process.cwd(), 'data');
@@ -43,27 +46,32 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
       order.quantity,
       order.productPrice,
       order.deliveryFee,
-      order.totalPrice
+      order.totalPrice,
+      `"⏳ قيد التأكيد"`,
+      `"${(order.notes || '').replace(/"/g, '""')}"`,
+      `"⏳ قيد الإرسال"`
     ].join(',');
 
     if (!fileExists) {
-      const header = 'رقم الطلب,تاريخ الطلب,الاسم واللقب,رقم الهاتف,الولاية,البلدية,طريقة التوصيل,العنوان بالتفصيل,الموديل المختار,الكمية,سعر المنتوج,سعر التوصيل,المجموع الإجمالي\n';
+      const header = '"رقم الطلب","تاريخ الطلب","الاسم واللقب","رقم الهاتف","الولاية","البلدية","طريقة التوصيل","العنوان بالتفصيل","الموديل المختار","الكمية","سعر المنتج (دج)","سعر التوصيل (دج)","المجموع الإجمالي (دج)","حالة الطلب","ملاحظات","حالة إرسال الإيميل"\n';
       fs.writeFileSync(csvFile, '\uFEFF' + header + row + '\n', 'utf8');
     } else {
       fs.appendFileSync(csvFile, row + '\n', 'utf8');
     }
   } catch (err) {
-    console.error('⚠️ [Local CSV Error]', err);
+    console.error('⚠️ [Local CSV Backup Error]', err);
   }
 
-  // 2. Google Sheets API Sync
+  // 2. Google Sheets API Sync (Columns A to P)
   try {
     const modelNames = order.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
     const formattedPhone = order.phone.startsWith('0') ? `'${order.phone}` : order.phone;
-    await sheets.spreadsheets.values.append({
+
+    const appendRes = await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'الطلبات المؤكدة!A:N',
+      range: 'الطلبات المؤكدة!A:P',
       valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
       requestBody: {
         values: [
           [
@@ -80,15 +88,116 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
             order.productPrice,
             order.deliveryFee,
             order.totalPrice,
-            order.notes || '⏳ قيد التأكيد'
+            '⏳ قيد التأكيد',
+            order.notes || '',
+            '⏳ قيد الإرسال'
           ]
         ]
       }
     });
-    console.log('✅ [Google Sheet] Order synced to spreadsheet successfully');
-  } catch (webhookErr) {
-    console.error('⚠️ [Google Sheet Sync Error]', webhookErr);
+
+    const updatedRange = appendRes.data.updates?.updatedRange;
+    const match = updatedRange ? updatedRange.match(/!A(\d+)/) : null;
+    if (match) {
+      rowNumber = parseInt(match[1], 10);
+    }
+
+    console.log(`✅ [Google Sheet] Order ${order.orderId} stored successfully at row ${rowNumber || 'unknown'}`);
+    return { success: true, rowNumber };
+  } catch (sheetErr) {
+    console.error('⚠️ [Google Sheet Sync Error]', sheetErr);
+    return { success: false, rowNumber: undefined };
   }
+}
+
+/**
+ * Step 3: Update the order's email status in Google Sheet and Local CSV
+ * Sets Column P to "✅ تم الإرسال" or "❌ فشل الإرسال"
+ */
+export async function updateOrderEmailStatus(
+  orderId: string,
+  status: '✅ تم الإرسال' | '❌ فشل الإرسال' | string,
+  rowNumber?: number
+): Promise<boolean> {
+  let sheetUpdated = false;
+
+  // 1. Direct update to Google Sheet cell P{rowNumber}
+  if (rowNumber && rowNumber > 1) {
+    try {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_SPREADSHEET_ID,
+        range: `الطلبات المؤكدة!P${rowNumber}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[status]]
+        }
+      });
+      console.log(`✅ [Google Sheet] Order ${orderId} email marked as "${status}" at row ${rowNumber}`);
+      sheetUpdated = true;
+    } catch (directErr) {
+      console.error(`⚠️ [Google Sheet Direct Update Error at row ${rowNumber}]:`, directErr);
+    }
+  }
+
+  // Fallback: search Column A for orderId if direct update didn't run or failed
+  if (!sheetUpdated) {
+    try {
+      const colARes = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_SPREADSHEET_ID,
+        range: 'الطلبات المؤكدة!A:A'
+      });
+      const rows = colARes.data.values || [];
+      const foundIdx = rows.findIndex(r => r && r[0] === orderId);
+      if (foundIdx !== -1) {
+        const targetRow = foundIdx + 1;
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SHEET_SPREADSHEET_ID,
+          range: `الطلبات المؤكدة!P${targetRow}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[status]]
+          }
+        });
+        console.log(`✅ [Google Sheet Fallback] Order ${orderId} email marked as "${status}" at row ${targetRow}`);
+        sheetUpdated = true;
+      }
+    } catch (searchErr) {
+      console.error('⚠️ [Google Sheet Search Update Error]:', searchErr);
+    }
+  }
+
+  // 2. Update Local CSV Backup
+  try {
+    const csvFile = path.join(process.cwd(), 'data', 'orders.csv');
+    if (fs.existsSync(csvFile)) {
+      const content = fs.readFileSync(csvFile, 'utf8');
+      const lines = content.split('\n');
+      let modified = false;
+
+      const updatedLines = lines.map(line => {
+        if (line.includes(`"${orderId}"`)) {
+          modified = true;
+          const parts = line.split(',');
+          if (parts.length >= 16) {
+            parts[15] = `"${status}"`;
+            return parts.join(',');
+          } else {
+            return `${line},"${status}"`;
+          }
+        }
+        return line;
+      });
+
+      if (modified) {
+        fs.writeFileSync(csvFile, updatedLines.join('\n'), 'utf8');
+        console.log(`✅ [Local CSV] Order ${orderId} updated to "${status}"`);
+      }
+    }
+  } catch (csvErr) {
+    console.error('⚠️ [Local CSV Update Error]:', csvErr);
+  }
+
+  return sheetUpdated;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
