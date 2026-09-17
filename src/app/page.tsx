@@ -108,7 +108,6 @@ export default function AlgerianWatchLandingPage() {
   const hasFiredPixelRef = useRef(false);
   const isOrderCompletedRef = useRef(false);
   const loggedLeadsRef = useRef<Set<string>>(new Set());
-  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Trigger confetti celebration when Success Screen mounts
   useEffect(() => {
@@ -141,8 +140,16 @@ export default function AlgerianWatchLandingPage() {
       }
     }
 
-    if (fullName.trim().length < 2 || !wilayaId || !communeName) return;
-    if (!/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) return;
+    // Strict validation: must have filled ALL form fields completely!
+    if (
+      fullName.trim().length < 2 ||
+      !/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone) ||
+      !wilayaId ||
+      !communeName ||
+      addressDetails.trim().length < 2
+    ) {
+      return;
+    }
 
     if (loggedLeadsRef.current.has(cleanPhone)) return;
     loggedLeadsRef.current.add(cleanPhone);
@@ -164,57 +171,67 @@ export default function AlgerianWatchLandingPage() {
     };
 
     // Internal server notification only - zero Meta ads events fired
-    fetch('/api/abandoned-lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      keepalive: true
-    }).catch(() => {});
+    const payloadStr = JSON.stringify(payload);
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        const blob = new Blob([payloadStr], { type: 'application/json' });
+        navigator.sendBeacon('/api/abandoned-lead', blob);
+      } else {
+        fetch('/api/abandoned-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payloadStr,
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch {
+      fetch('/api/abandoned-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payloadStr,
+        keepalive: true
+      }).catch(() => {});
+    }
   };
 
   useEffect(() => {
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-
-    const isFormFilledEnough = 
+    // Only capture when ALL fields are fully filled and the user leaves without ordering
+    const isFormFullyFilled = 
       fullName.trim().length >= 2 && 
       /^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone) && 
-      Boolean(wilayaId && communeName);
+      Boolean(wilayaId) &&
+      Boolean(communeName) &&
+      addressDetails.trim().length >= 2;
 
-    if (isFormFilledEnough && !isOrderCompletedRef.current) {
-      idleTimerRef.current = setTimeout(() => {
-        logAbandonedLead('idle_timeout');
-      }, 60000);
-    }
-
-    const handleBeforeUnload = () => {
-      if (isFormFilledEnough && !isOrderCompletedRef.current) {
+    const handleLeave = () => {
+      if (isFormFullyFilled && !isOrderCompletedRef.current) {
         logAbandonedLead('page_leave');
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && isFormFilledEnough && !isOrderCompletedRef.current) {
+      if (document.visibilityState === 'hidden' && isFormFullyFilled && !isOrderCompletedRef.current) {
         logAbandonedLead('tab_hidden');
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', handleLeave);
+    window.addEventListener('pagehide', handleLeave);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleLeave);
+      window.removeEventListener('pagehide', handleLeave);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel]);
+  }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel, addressDetails, cleanPhone]);
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     // Immediately stop abandoned lead tracking when order is submitted
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     isOrderCompletedRef.current = true;
 
     setErrorMessage('');

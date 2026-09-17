@@ -15,10 +15,21 @@ export async function POST(req: NextRequest) {
     const cleanPhone = (body.phone || '').trim().replace(/[\s\-]/g, '');
     const fullName = (body.fullName || '').trim();
 
-    // Stricter validation: must have valid name and Algerian phone number
-    if (fullName.length < 2 || !/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) {
+    const wilayaName = (body.wilayaName || '').trim();
+    const communeName = (body.communeName || '').trim();
+    const addressDetails = (body.addressDetails || '').trim();
+
+    // Strictest validation: customer MUST have filled out ALL form fields!
+    // If ANY required field is missing or empty, do NOT record as abandoned lead.
+    if (
+      fullName.length < 2 ||
+      !/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone) ||
+      !wilayaName ||
+      !communeName ||
+      addressDetails.length < 2
+    ) {
       return NextResponse.json(
-        { error: 'بيانات غير مكتملة أو رقم هاتف غير صحيح.' },
+        { error: 'بيانات غير مكتملة. لا يتم تسجيل السلة المتروكة إلا بعد إكمال كامل حقول الاستمارة.' },
         { status: 400 }
       );
     }
@@ -43,10 +54,10 @@ export async function POST(req: NextRequest) {
       leadId,
       fullName,
       phone: cleanPhone,
-      wilayaName: body.wilayaName || '',
-      communeName: body.communeName || '',
+      wilayaName,
+      communeName,
       deliveryType: body.deliveryType === 'desk' ? 'desk' : 'domicile',
-      addressDetails: body.addressDetails ? body.addressDetails.trim() : undefined,
+      addressDetails,
       selectedModels: body.selectedModels || [],
       estimatedTotal: Number(body.estimatedTotal) || 2200,
       abandonedAt,

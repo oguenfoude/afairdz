@@ -217,7 +217,7 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'السلات المتروكة!A:N',
+      range: 'السلات المتروكة!A:P',
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -236,7 +236,9 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
             1500,
             lead.deliveryType === 'desk' ? 500 : 700,
             lead.estimatedTotal || 2200,
-            stageName
+            stageName,
+            '⏳ متروك (جديد)',
+            'استمارة مكتملة - خرج دون ضغط تأكيد الطلب'
           ]
         ]
       }
