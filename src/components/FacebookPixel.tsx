@@ -67,8 +67,9 @@ export default function FacebookPixel() {
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
           fbq('set', 'autoConfig', false, '${FB_PIXEL_ID}');
+          fbq('set', 'allowAutoConfig', false, '${FB_PIXEL_ID}');
           fbq('init', '${FB_PIXEL_ID}');
-          /* Visit and PageView tracking strictly disabled per user request: only orders count */
+          /* Visit, PageView and automatic button clicks disabled: only manual Purchase event counts */
         `
       }}
     />

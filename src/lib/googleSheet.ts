@@ -200,8 +200,49 @@ export async function updateOrderEmailStatus(
   return sheetUpdated;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function syncLeadToGoogleSheet(_lead?: AbandonedLeadData): Promise<void> {
-  // Abandoned leads sync disabled: only confirmed orders are saved
-  return;
+/**
+ * Sync Abandoned Cart Lead directly to Google Sheets tab "السلات المتروكة"
+ */
+export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<void> {
+  try {
+    const modelNames = (lead.selectedModels || []).map(m => m.modelName).join(' + ') || 'غير محدد';
+    const formattedPhone = lead.phone.startsWith('0') ? `'${lead.phone}` : lead.phone;
+
+    const stageMap: Record<string, string> = {
+      idle_timeout: 'توقف في الاستمارة',
+      page_leave: 'خروج من الصفحة',
+      tab_hidden: 'تصغير المتصفح'
+    };
+    const stageName = stageMap[lead.stage] || lead.stage;
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_SPREADSHEET_ID,
+      range: 'السلات المتروكة!A:N',
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [
+          [
+            lead.leadId,
+            lead.abandonedAt,
+            lead.fullName,
+            formattedPhone,
+            lead.wilayaName || '---',
+            lead.communeName || '---',
+            lead.deliveryType === 'desk' ? 'استلام من المكتب' : 'توصيل للمنزل',
+            lead.addressDetails || '---',
+            modelNames,
+            1,
+            1500,
+            lead.deliveryType === 'desk' ? 500 : 700,
+            lead.estimatedTotal || 2200,
+            stageName
+          ]
+        ]
+      }
+    });
+    console.log(`✅ [Google Sheet] Abandoned lead ${lead.leadId} synced to "السلات المتروكة"`);
+  } catch (sheetErr) {
+    console.error('⚠️ [Google Sheet Lead Sync Error]:', sheetErr);
+  }
 }

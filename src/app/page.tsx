@@ -45,9 +45,10 @@ const setHasOrderedCookie = () => {
 const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
   if (typeof window === 'undefined') return true;
   const firedKey = `pixel_purchase_${orderId}`;
-  if (sessionStorage.getItem(firedKey) === 'true') {
+  if (localStorage.getItem(firedKey) === 'true' || sessionStorage.getItem(firedKey) === 'true') {
     return true;
   }
+  localStorage.setItem(firedKey, 'true');
   sessionStorage.setItem(firedKey, 'true');
   return false;
 };
@@ -105,6 +106,9 @@ export default function AlgerianWatchLandingPage() {
   // References
   const formSectionRef = useRef<HTMLDivElement>(null);
   const hasFiredPixelRef = useRef(false);
+  const isOrderCompletedRef = useRef(false);
+  const loggedLeadsRef = useRef<Set<string>>(new Set());
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Trigger confetti celebration when Success Screen mounts
   useEffect(() => {
@@ -129,8 +133,90 @@ export default function AlgerianWatchLandingPage() {
   const hasLocation = Boolean(wilayaId && communeName);
   const cleanPhone = phone.trim().replace(/[\s\-]/g, '');
 
+  const logAbandonedLead = (stage: string) => {
+    if (isOrderCompletedRef.current) return;
+    if (typeof window !== 'undefined') {
+      if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
+        return;
+      }
+    }
+
+    if (fullName.trim().length < 2 || !wilayaId || !communeName) return;
+    if (!/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) return;
+
+    if (loggedLeadsRef.current.has(cleanPhone)) return;
+    loggedLeadsRef.current.add(cleanPhone);
+
+    const payload = {
+      fullName: fullName.trim(),
+      phone: cleanPhone,
+      wilayaName: currentWilaya ? currentWilaya.wilaya_name : '',
+      communeName: communeName || '',
+      deliveryType,
+      addressDetails: addressDetails.trim(),
+      selectedModels: [{
+        modelId: selectedModel.id,
+        modelName: selectedModel.name,
+        image: selectedModel.image
+      }],
+      estimatedTotal: totalPrice,
+      stage
+    };
+
+    // Internal server notification only - zero Meta ads events fired
+    fetch('/api/abandoned-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  };
+
+  useEffect(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+
+    const isFormFilledEnough = 
+      fullName.trim().length >= 2 && 
+      /^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone) && 
+      Boolean(wilayaId && communeName);
+
+    if (isFormFilledEnough && !isOrderCompletedRef.current) {
+      idleTimerRef.current = setTimeout(() => {
+        logAbandonedLead('idle_timeout');
+      }, 60000);
+    }
+
+    const handleBeforeUnload = () => {
+      if (isFormFilledEnough && !isOrderCompletedRef.current) {
+        logAbandonedLead('page_leave');
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && isFormFilledEnough && !isOrderCompletedRef.current) {
+        logAbandonedLead('tab_hidden');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel]);
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    // Immediately stop abandoned lead tracking when order is submitted
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    isOrderCompletedRef.current = true;
+
     setErrorMessage('');
 
     if (!fullName.trim()) { setErrorMessage('يرجى إدخال الاسم واللقب.'); return; }

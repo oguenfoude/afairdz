@@ -105,21 +105,25 @@ export async function sendOrderNotification(order: OrderData) {
     console.warn('⚠️ Could not attach logo:', e);
   }
 
-  // 2. Attach Selected Watch Model Images for Gmail display
+  // 2. Attach Selected Watch Model Images for Gmail display with hosted fallback
   const modelsHtml = order.selectedModels.map((m, idx) => {
     let imgHtml = '';
     try {
       if (m.image) {
         const cleanImgRel = m.image.replace(/^\//, '');
         const fullImgPath = path.join(process.cwd(), 'public', cleanImgRel);
+        const cidKey = `model_image_${idx}`;
+        const hostedImgUrl = `https://afairdz.vercel.app/${cleanImgRel}`;
+
         if (fs.existsSync(fullImgPath)) {
-          const cidKey = `model_image_${idx}`;
           attachments.push({
             filename: `${m.modelName.replace(/[\s\/]/g, '_')}_${m.modelId}.webp`,
             path: fullImgPath,
             cid: cidKey
           });
-          imgHtml = `<img src="cid:${cidKey}" alt="${m.modelName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; display: block;" />`;
+          imgHtml = `<img src="cid:${cidKey}" alt="${m.modelName}" width="90" height="90" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />`;
+        } else {
+          imgHtml = `<img src="${hostedImgUrl}" alt="${m.modelName}" width="90" height="90" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />`;
         }
       }
     } catch (imgErr) {
@@ -128,12 +132,12 @@ export async function sendOrderNotification(order: OrderData) {
 
     return `
       <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px; width: 90px; text-align: center; vertical-align: middle;">
-          ${imgHtml || '<span style="font-size: 11px; color: #94a3b8;">صورة</span>'}
+        <td style="padding: 12px; width: 100px; text-align: center; vertical-align: middle;">
+          ${imgHtml || '<span style="font-size: 11px; color: #94a3b8;">صورة الموديل</span>'}
         </td>
         <td style="padding: 12px; text-align: right; vertical-align: middle;">
-          <div style="font-size: 15px; font-weight: 800; color: #1e1b4b; margin-bottom: 4px;">${m.modelName}</div>
-          <div style="font-size: 12px; color: #64748b;">موديل رقم #${m.modelId} • ساعة + خاتم وبراسلي مجاناً داخل علبة</div>
+          <div style="font-size: 16px; font-weight: 800; color: #1e1b4b; margin-bottom: 4px;">${m.modelName}</div>
+          <div style="font-size: 13px; color: #64748b;">طقم ساعة رجالية فاخرة + خاتم وبراسلي مجاناً داخل علبة إهداء</div>
         </td>
       </tr>
     `;
@@ -188,6 +192,7 @@ export async function sendOrderNotification(order: OrderData) {
               <th>رقم الهاتف</th>
               <td><a href="tel:${order.phone}" class="phone-link">📞 <span dir="ltr">${order.phone}</span></a></td>
             </tr>
+            ${order.phone2 ? `<tr><th>رقم هاتف إضافي</th><td><a href="tel:${order.phone2}" class="phone-link">📞 <span dir="ltr">${order.phone2}</span></a></td></tr>` : ''}
             <tr>
               <th>الولاية</th>
               <td>${order.wilayaName} (${order.wilayaId})</td>
@@ -227,7 +232,7 @@ export async function sendOrderNotification(order: OrderData) {
             </div>
           </div>
 
-          <a href="tel:${order.phone}" class="btn">📞 الاتصال بالزبون الآن للتأكيد</a>
+          <a href="tel:${order.phone}" class="btn">📞 الاتصال بالزبون الآن للتأكيد (${order.phone})</a>
         </div>
         
         <div class="footer">
@@ -251,8 +256,151 @@ export async function sendOrderNotification(order: OrderData) {
   return await transporter.sendMail(mailOptions);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function sendAbandonedLeadNotification(_lead?: AbandonedLeadData) {
-  // Abandoned leads tracking disabled: only confirmed, validated orders are processed
-  return { success: true, disabled: true };
+/**
+ * Dispatch Abandoned Cart Alert directly to kalijeogo@gmail.com
+ * Internal only - zero ads pixel events fired
+ */
+export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
+  const stageLabels: Record<string, string> = {
+    idle_timeout: 'توقف عن ملء الاستمارة (أكثر من 60 ثانية)',
+    page_leave: 'غادر الصفحة قبل النقر على تأكيد الطلب',
+    tab_hidden: 'قام بالخروج أو تصغير المتصفح'
+  };
+  const stageLabel = stageLabels[lead.stage] || 'لم يكمل الطلب';
+
+  const attachments: Array<{ filename: string; path: string; cid?: string }> = [];
+
+  const modelsHtml = (lead.selectedModels || []).map((m, idx) => {
+    let imgHtml = '';
+    try {
+      if (m.image) {
+        const cleanImgRel = m.image.replace(/^\//, '');
+        const fullImgPath = path.join(process.cwd(), 'public', cleanImgRel);
+        const cidKey = `lead_model_image_${idx}`;
+        const hostedImgUrl = `https://afairdz.vercel.app/${cleanImgRel}`;
+
+        if (fs.existsSync(fullImgPath)) {
+          attachments.push({
+            filename: `${m.modelName.replace(/[\s\/]/g, '_')}_${m.modelId}.webp`,
+            path: fullImgPath,
+            cid: cidKey
+          });
+          imgHtml = `<img src="cid:${cidKey}" alt="${m.modelName}" width="90" height="90" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />`;
+        } else {
+          imgHtml = `<img src="${hostedImgUrl}" alt="${m.modelName}" width="90" height="90" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />`;
+        }
+      }
+    } catch (imgErr) {
+      console.warn('⚠️ Could not attach lead model image:', imgErr);
+    }
+
+    return `
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 12px; width: 100px; text-align: center; vertical-align: middle;">
+          ${imgHtml || '<span style="font-size: 11px; color: #94a3b8;">صورة الموديل</span>'}
+        </td>
+        <td style="padding: 12px; text-align: right; vertical-align: middle;">
+          <div style="font-size: 16px; font-weight: 800; color: #1e1b4b; margin-bottom: 4px;">${m.modelName}</div>
+          <div style="font-size: 13px; color: #64748b;">طقم ساعة رجالية فاخرة + خاتم وبراسلي مجاناً</div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #fef2f2; margin: 0; padding: 40px 20px; color: #1f2937; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .header { background-color: #991b1b; padding: 25px 20px; text-align: center; border-bottom: 4px solid #f59e0b; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; }
+        .badge { background-color: #fef08a; color: #854d0e; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block; margin-top: 10px; }
+        .content { padding: 30px; }
+        .section-title { font-size: 17px; color: #991b1b; font-weight: 700; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #fee2e2; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .info-table th { width: 35%; padding: 10px 14px; background-color: #fff1f2; color: #881337; font-weight: 600; text-align: right; border: 1px solid #fecdd3; font-size: 14px; }
+        .info-table td { padding: 10px 14px; border: 1px solid #fecdd3; font-size: 15px; color: #1e293b; font-weight: 600; }
+        .phone-link { color: #dc2626; font-weight: 800; text-decoration: none; font-size: 17px; }
+        .btn { display: block; width: 100%; box-sizing: border-box; text-align: center; background-color: #dc2626; color: #ffffff; padding: 16px 20px; text-decoration: none; font-size: 18px; font-weight: 800; border-radius: 8px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.25); }
+        .footer { text-align: center; padding: 15px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2 style="color:white; margin:0; margin-bottom: 8px; font-size: 24px;">Affaire DZ</h2>
+          <h1>⚠️ تنبيه سلة متروكة (زبون لم يكمل الطلب)</h1>
+          <div class="badge">المعرف: ${lead.leadId}</div>
+        </div>
+        
+        <div class="content">
+          <div style="text-align: center; color: #64748b; font-size: 13px; margin-bottom: 20px;">
+            توقيت المحاولة: <span dir="ltr">${lead.abandonedAt}</span>
+          </div>
+
+          <div class="section-title">👤 بيانات الزبون المستهدَف للاسترجاع</div>
+          <table class="info-table">
+            <tr>
+              <th>الاسم واللقب</th>
+              <td>${lead.fullName}</td>
+            </tr>
+            <tr>
+              <th>رقم الهاتف</th>
+              <td><a href="tel:${lead.phone}" class="phone-link">📞 <span dir="ltr">${lead.phone}</span></a></td>
+            </tr>
+            <tr>
+              <th>الولاية</th>
+              <td>${lead.wilayaName || 'غير محدد'}</td>
+            </tr>
+            <tr>
+              <th>البلدية</th>
+              <td>${lead.communeName || 'غير محدد'}</td>
+            </tr>
+            <tr>
+              <th>طريقة الاستلام</th>
+              <td>${lead.deliveryType === 'desk' ? 'استلام من المكتب' : 'توصيل للمنزل'}</td>
+            </tr>
+            <tr>
+              <th>العنوان بالتفصيل</th>
+              <td>${lead.addressDetails || '---'}</td>
+            </tr>
+            <tr>
+              <th>سبب التوقف</th>
+              <td style="color: #b91c1c;">${stageLabel}</td>
+            </tr>
+            <tr>
+              <th>المبلغ التقديري</th>
+              <td style="color: #1e1b4b;">${lead.estimatedTotal || 2200} دج</td>
+            </tr>
+          </table>
+
+          <div class="section-title">📦 الموديل الذي كان يختاره</div>
+          <table class="items-table">
+            ${modelsHtml}
+          </table>
+
+          <a href="tel:${lead.phone}" class="btn">📞 الاتصال بالزبون الآن لاسترجاع الطلب (${lead.phone})</a>
+        </div>
+        
+        <div class="footer">
+          إشعار آلي داخلي خاص بإدارة متجر Affaire DZ • غير مرتبط بإعلانات ميتا نهائياً
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const transporter = getTransporter();
+  return await transporter.sendMail({
+    from: SENDER_EMAIL,
+    to: ADMIN_EMAIL,
+    subject: `⚠️ [سلة متروكة] زبون لم يكمل الطلب: ${lead.fullName} (${lead.phone})`,
+    html,
+    attachments
+  });
 }
