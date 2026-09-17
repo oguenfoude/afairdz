@@ -91,73 +91,8 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<void> {
   }
 }
 
-export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<void> {
-  try {
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    const csvFile = path.join(dataDir, 'abandoned_leads.csv');
-    const fileExists = fs.existsSync(csvFile);
-
-    const modelNames = lead.selectedModels && lead.selectedModels.length > 0 ? lead.selectedModels.map(m => m.modelName).join(' + ') : 'غير محدد';
-
-    const row = [
-      `"${lead.leadId}"`,
-      `"${lead.abandonedAt}"`,
-      `"${lead.fullName || 'غير محدد'}"`,
-      `"${lead.phone}"`,
-      `"${lead.wilayaName || ''}"`,
-      `"${lead.communeName || ''}"`,
-      `"${lead.addressDetails || ''}"`,
-      `"${lead.deliveryType || ''}"`,
-      lead.estimatedTotal || 0,
-      `"${modelNames}"`,
-      `"${lead.stage}"`
-    ].join(',');
-
-    if (!fileExists) {
-      const header = 'رقم المعرف,تاريخ التوقف,الاسم,رقم الهاتف,الولاية,البلدية,العنوان,طريقة التوصيل,المبلغ التقديري,الموديل المختار,المرحلة\n';
-      fs.writeFileSync(csvFile, '\uFEFF' + header + row + '\n', 'utf8');
-    } else {
-      fs.appendFileSync(csvFile, row + '\n', 'utf8');
-    }
-  } catch (err) {
-    console.error('⚠️ [Local Leads CSV Error]', err);
-  }
-
-  // 2. Google Sheets API Sync (Abandoned Leads)
-  try {
-    const modelNames = lead.selectedModels && lead.selectedModels.length > 0 ? lead.selectedModels.map(m => m.modelName).join(' + ') : 'غير محدد';
-    const formattedPhone = lead.phone && lead.phone.startsWith('0') ? `'${lead.phone}` : (lead.phone || '');
-    
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'السلات المتروكة!A:M',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [
-          [
-            lead.leadId,
-            lead.abandonedAt,
-            lead.fullName || 'بدون اسم',
-            formattedPhone,
-            lead.wilayaName || '',
-            lead.communeName || '',
-            lead.deliveryType === 'desk' ? 'استلام من المكتب' : (lead.deliveryType === 'domicile' ? 'توصيل للمنزل' : ''),
-            lead.addressDetails || '---',
-            modelNames,
-            1,
-            1500,
-            (lead.estimatedTotal && lead.estimatedTotal > 1500 ? lead.estimatedTotal - 1500 : 0),
-            lead.estimatedTotal || 0
-          ]
-        ]
-      }
-    });
-    console.log('✅ [Google Sheet] Abandoned Lead synced to السلات المتروكة tab');
-  } catch (err) {
-    console.error('⚠️ [Google Sheet Leads Sync Error]', err);
-  }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function syncLeadToGoogleSheet(_lead?: AbandonedLeadData): Promise<void> {
+  // Abandoned leads sync disabled: only confirmed orders are saved
+  return;
 }

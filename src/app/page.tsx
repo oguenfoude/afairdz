@@ -104,18 +104,7 @@ export default function AlgerianWatchLandingPage() {
 
   // References
   const formSectionRef = useRef<HTMLDivElement>(null);
-  const isOrderCompletedRef = useRef(false);
-  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const loggedLeadsRef = useRef<Set<string>>(new Set());
   const hasFiredPixelRef = useRef(false);
-
-  useEffect(() => {
-    trackFBPixel('ViewContent', {
-      content_name: 'طقم ساعة يد رجالية فاخرة',
-      value: 1500,
-      currency: 'DZD'
-    });
-  }, []);
 
   // Trigger confetti celebration when Success Screen mounts
   useEffect(() => {
@@ -140,86 +129,6 @@ export default function AlgerianWatchLandingPage() {
   const hasLocation = Boolean(wilayaId && communeName);
   const cleanPhone = phone.trim().replace(/[\s\-]/g, '');
 
-  const logCustomerData = (stage: string) => {
-    if (isOrderCompletedRef.current) return;
-    if (stage === 'input_blur') return;
-
-    if (typeof window !== 'undefined') {
-      if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
-        return;
-      }
-    }
-
-    if (fullName.trim().length < 2 || !wilayaId || !communeName) return;
-    if (!/^(0)?(5|6|7)[0-9]{8}$/.test(cleanPhone)) return;
-
-    const summary = `${cleanPhone}-${wilayaId}-${selectedModel.id}`;
-    if (loggedLeadsRef.current.has(summary)) return;
-    loggedLeadsRef.current.add(summary);
-
-    const payload = {
-      fullName: fullName.trim(),
-      phone: cleanPhone,
-      wilayaName: currentWilaya ? currentWilaya.wilaya_name : '',
-      communeName: communeName || '',
-      deliveryType,
-      addressDetails: addressDetails.trim(),
-      selectedModels: [{
-        modelId: selectedModel.id,
-        modelName: selectedModel.name,
-        image: selectedModel.image
-      }],
-      estimatedTotal: totalPrice,
-      stage
-    };
-
-    fetch('/api/abandoned-lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      keepalive: true
-    }).catch(() => {});
-  };
-
-  useEffect(() => {
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    
-    const isFormFilledEnough = 
-      fullName.trim().length >= 2 && 
-      /^(0)?(5|6|7)[0-9]{8}$/.test(cleanPhone) && 
-      Boolean(wilayaId && communeName);
-
-    if (isFormFilledEnough && !isOrderCompletedRef.current) {
-      // 1. Idle Tracking (60 seconds of no action)
-      idleTimerRef.current = setTimeout(() => {
-        logCustomerData('idle_timeout');
-      }, 60000);
-    }
-
-    // 2. Page Leave Tracking (Closing tab or navigating away)
-    const handleBeforeUnload = () => {
-      if (isFormFilledEnough && !isOrderCompletedRef.current) {
-        logCustomerData('page_leave');
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && isFormFilledEnough && !isOrderCompletedRef.current) {
-        logCustomerData('tab_hidden');
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, fullName, wilayaId, communeName, deliveryType, selectedModel]);
-
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -230,9 +139,6 @@ export default function AlgerianWatchLandingPage() {
     if (!communeName) { setErrorMessage('يرجى اختيار البلدية.'); return; }
     if (!addressDetails.trim()) { setErrorMessage('يرجى كتابة العنوان بالتفصيل.'); return; }
 
-    // Lock abandoned lead tracking immediately upon real submission
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    isOrderCompletedRef.current = true;
 
     if (typeof window !== 'undefined') {
       if (localStorage.getItem('hasOrdered') === 'true' || document.cookie.includes('hasOrdered=true')) {
@@ -286,7 +192,6 @@ export default function AlgerianWatchLandingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'حدث خطأ أثناء تسجيل الطلب.');
 
-      isOrderCompletedRef.current = true;
       if (typeof window !== 'undefined') {
         localStorage.setItem('hasOrdered', 'true');
         setHasOrderedCookie();
