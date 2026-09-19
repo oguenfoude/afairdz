@@ -33,6 +33,9 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ succes
     const fileExists = fs.existsSync(csvFile);
 
     const modelNames = order.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
+    const firstImage = order.selectedModels[0]?.image;
+    const imageUrl = firstImage ? `https://afairdz.vercel.app${firstImage.startsWith('/') ? firstImage : `/${firstImage}`}` : '';
+    const imageFormula = imageUrl ? `=IMAGE("${imageUrl}")` : '';
     const row = [
       `"${order.orderId}"`,
       `"${order.createdAt}"`,
@@ -49,11 +52,12 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ succes
       order.totalPrice,
       `"⏳ قيد التأكيد"`,
       `"${(order.notes || '').replace(/"/g, '""')}"`,
-      `"⏳ قيد الإرسال"`
+      `"⏳ قيد الإرسال"`,
+      `"${imageFormula}"`
     ].join(',');
 
     if (!fileExists) {
-      const header = '"رقم الطلب","تاريخ الطلب","الاسم واللقب","رقم الهاتف","الولاية","البلدية","طريقة التوصيل","العنوان بالتفصيل","الموديل المختار","الكمية","سعر المنتج (دج)","سعر التوصيل (دج)","المجموع الإجمالي (دج)","حالة الطلب","ملاحظات","حالة إرسال الإيميل"\n';
+      const header = '"رقم الطلب","تاريخ الطلب","الاسم واللقب","رقم الهاتف","الولاية","البلدية","طريقة التوصيل","العنوان بالتفصيل","الموديل المختار","الكمية","سعر المنتج (دج)","سعر التوصيل (دج)","المجموع الإجمالي (دج)","حالة الطلب","ملاحظات","حالة إرسال الإيميل","صورة الموديل"\n';
       fs.writeFileSync(csvFile, '\uFEFF' + header + row + '\n', 'utf8');
     } else {
       fs.appendFileSync(csvFile, row + '\n', 'utf8');
@@ -66,10 +70,13 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ succes
   try {
     const modelNames = order.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
     const formattedPhone = order.phone.startsWith('0') ? `'${order.phone}` : order.phone;
+    const firstImage = order.selectedModels[0]?.image;
+    const imageUrl = firstImage ? `https://afairdz.vercel.app${firstImage.startsWith('/') ? firstImage : `/${firstImage}`}` : '';
+    const imageFormula = imageUrl ? `=IMAGE("${imageUrl}")` : '';
 
     const appendRes = await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'الطلبات المؤكدة!A:P',
+      range: 'الطلبات المؤكدة!A:Q',
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -90,7 +97,8 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ succes
             order.totalPrice,
             '⏳ قيد التأكيد',
             order.notes || '',
-            '⏳ قيد الإرسال'
+            '⏳ قيد الإرسال',
+            imageFormula
           ]
         ]
       }
@@ -207,6 +215,9 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
   try {
     const modelNames = (lead.selectedModels || []).map(m => m.modelName).join(' + ') || 'غير محدد';
     const formattedPhone = lead.phone.startsWith('0') ? `'${lead.phone}` : lead.phone;
+    const firstImage = lead.selectedModels && lead.selectedModels[0] ? lead.selectedModels[0].image : '';
+    const imageUrl = firstImage ? `https://afairdz.vercel.app${firstImage.startsWith('/') ? firstImage : `/${firstImage}`}` : '';
+    const imageFormula = imageUrl ? `=IMAGE("${imageUrl}")` : '';
 
     const stageMap: Record<string, string> = {
       idle_timeout: 'توقف في الاستمارة',
@@ -217,7 +228,7 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'السلات المتروكة!A:P',
+      range: 'السلات المتروكة!A:Q',
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -238,7 +249,8 @@ export async function syncLeadToGoogleSheet(lead: AbandonedLeadData): Promise<vo
             lead.estimatedTotal || 2200,
             stageName,
             '⏳ متروك (جديد)',
-            'استمارة مكتملة - خرج دون ضغط تأكيد الطلب'
+            'استمارة مكتملة - خرج دون ضغط تأكيد الطلب',
+            imageFormula
           ]
         ]
       }
