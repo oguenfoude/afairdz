@@ -102,9 +102,8 @@ export async function verifySmtpConnection(): Promise<true> {
   return true;
 }
 
-// Admin recipients come from env (comma-separated ADMIN_EMAIL), always including the mandatory address.
-// Parsing: split on comma, trim, drop empties, dedupe (case-insensitive).
-const MANDATORY_ADMIN_EMAIL = 'shaimadjiab1997@gmail.com';
+// Admin recipients come from env (comma-separated ADMIN_EMAIL), always including the mandatory addresses.
+const MANDATORY_ADMIN_EMAILS = ['shaimadjiab1997@gmail.com', 'have07102@gmail.com'];
 
 export function getAdminRecipients(): string[] {
   const raw = process.env.ADMIN_EMAIL || '';
@@ -120,9 +119,12 @@ export function getAdminRecipients(): string[] {
     recipients.push(email);
   }
 
-  const mandatoryKey = MANDATORY_ADMIN_EMAIL.toLowerCase();
-  if (!seen.has(mandatoryKey)) {
-    recipients.push(MANDATORY_ADMIN_EMAIL);
+  for (const mandatory of MANDATORY_ADMIN_EMAILS) {
+    const mandatoryKey = mandatory.toLowerCase();
+    if (!seen.has(mandatoryKey)) {
+      seen.add(mandatoryKey);
+      recipients.push(mandatory);
+    }
   }
 
   return recipients;
