@@ -43,11 +43,24 @@ export interface AbandonedLeadData {
 
 let cachedTransporter: Transporter | null = null;
 
+function getSmtpCredentials(): { user: string; pass: string } {
+  const user = process.env.GOOGLE_EMAIL || process.env.SMTP_USER;
+  const pass = process.env.GOOGLE_APP_PASSWORD || process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    throw new Error(
+      'Missing SMTP credentials: set SMTP_USER and SMTP_PASS (or GOOGLE_EMAIL and GOOGLE_APP_PASSWORD). ' +
+      'بيانات اعتماد SMTP مفقودة: يرجى ضبط SMTP_USER و SMTP_PASS في متغيرات البيئة.'
+    );
+  }
+
+  return { user, pass };
+}
+
 function getTransporter() {
   if (cachedTransporter) return cachedTransporter;
 
-  const user = process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'oguenfoude@gmail.com';
-  const pass = process.env.GOOGLE_APP_PASSWORD || process.env.SMTP_PASS || 'qffh illr yauh duwb';
+  const { user, pass } = getSmtpCredentials();
 
   // For Gmail (default), service: 'gmail' is natively optimized for serverless environments (handles TLS/ports/DNS automatically)
   if (!process.env.SMTP_HOST || process.env.SMTP_HOST.includes('gmail.com')) {
@@ -83,9 +96,47 @@ function getTransporter() {
   return cachedTransporter;
 }
 
-// Single admin recipient: kalijeogo@gmail.com strictly as requested
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kalijeogo@gmail.com';
-const SENDER_EMAIL = process.env.EMAIL_FROM || '"Affaire DZ" <oguenfoude@gmail.com>';
+export async function verifySmtpConnection(): Promise<true> {
+  const transporter = getTransporter();
+  await transporter.verify();
+  return true;
+}
+
+// Admin recipients come from env (comma-separated ADMIN_EMAIL), always including the mandatory address.
+// Parsing: split on comma, trim, drop empties, dedupe (case-insensitive).
+const MANDATORY_ADMIN_EMAIL = 'shaimadjiab1997@gmail.com';
+
+export function getAdminRecipients(): string[] {
+  const raw = process.env.ADMIN_EMAIL || '';
+  const seen = new Set<string>();
+  const recipients: string[] = [];
+
+  for (const part of raw.split(',')) {
+    const email = part.trim();
+    if (!email) continue;
+    const key = email.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    recipients.push(email);
+  }
+
+  const mandatoryKey = MANDATORY_ADMIN_EMAIL.toLowerCase();
+  if (!seen.has(mandatoryKey)) {
+    recipients.push(MANDATORY_ADMIN_EMAIL);
+  }
+
+  return recipients;
+}
+
+export function getSenderEmail(): string {
+  if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
+  const user = process.env.SMTP_USER || process.env.GOOGLE_EMAIL;
+  if (user) return `"Affaire DZ" <${user}>`;
+  throw new Error(
+    'Missing sender email: set EMAIL_FROM or SMTP_USER. ' +
+    'بريد المرسل مفقود: يرجى ضبط EMAIL_FROM أو SMTP_USER في متغيرات البيئة.'
+  );
+}
 
 export async function sendOrderNotification(order: OrderData) {
   const deliveryTypeLabel = order.deliveryType === 'desk' ? 'استلام من المكتب (500 دج)' : 'توصيل لباب المنزل (700 دج)';
@@ -246,8 +297,8 @@ export async function sendOrderNotification(order: OrderData) {
 
   const transporter = getTransporter();
   const mailOptions = {
-    from: SENDER_EMAIL,
-    to: ADMIN_EMAIL,
+    from: getSenderEmail(),
+    to: getAdminRecipients(),
     subject: `✅ [Affaire DZ] طلب جديد: ${order.fullName} - ${order.wilayaName} (${order.totalPrice} دج)`,
     html,
     attachments
@@ -257,7 +308,7 @@ export async function sendOrderNotification(order: OrderData) {
 }
 
 /**
- * Dispatch Abandoned Cart Alert directly to kalijeogo@gmail.com
+ * Dispatch Abandoned Cart Alert to the env-driven admin recipient list.
  * Internal only - zero ads pixel events fired
  */
 export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
@@ -397,8 +448,8 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
 
   const transporter = getTransporter();
   return await transporter.sendMail({
-    from: SENDER_EMAIL,
-    to: ADMIN_EMAIL,
+    from: getSenderEmail(),
+    to: getAdminRecipients(),
     subject: `⚠️ [سلة متروكة] زبون لم يكمل الطلب: ${lead.fullName} (${lead.phone})`,
     html,
     attachments

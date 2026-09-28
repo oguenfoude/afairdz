@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     // 1. Sync to Google Sheets 'السلات المتروكة'
     await syncLeadToGoogleSheet(leadData);
 
-    // 2. Send email notification to kalijeogo@gmail.com
+    // 2. Send email notification to the env-driven admin recipient list
     await sendAbandonedLeadNotification(leadData);
 
     return NextResponse.json({ success: true, leadId });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendOrderNotification, OrderData } from '@/lib/mailer';
+import { sendOrderNotification, OrderData, getAdminRecipients } from '@/lib/mailer';
 import { syncOrderToGoogleSheet, updateOrderEmailStatus } from '@/lib/googleSheet';
 
 export const dynamic = 'force-dynamic';
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
         emailSent = true;
         const recipients = ('accepted' in emailResult && Array.isArray(emailResult.accepted)) 
           ? emailResult.accepted.map(String).join(', ') 
-          : 'kalijeogo@gmail.com';
+          : getAdminRecipients().join(', ');
         console.log(`✅ [Order Flow] Email delivered successfully to:`, recipients);
       } else {
         console.warn(`⚠️ [Order Flow] Email dispatched but acceptance unconfirmed:`, emailResult);
