@@ -32,6 +32,7 @@ interface OrderSuccessData {
   addressDetails?: string;
   totalPrice: number;
   selectedModels: { modelName: string; image: string; modelId: number }[];
+  isDuplicate?: boolean;
 }
 
 const generateOrderId = () => 'ORD-' + Date.now().toString().slice(-6);
@@ -109,9 +110,10 @@ export default function AlgerianWatchLandingPage() {
   const isOrderCompletedRef = useRef(false);
   const loggedLeadsRef = useRef<Set<string>>(new Set());
 
-  // Trigger confetti celebration when Success Screen mounts
+  // Trigger confetti celebration when FRESH Success Screen mounts only.
+  // Duplicates show a call-notice instead — no celebration, no new-order wording.
   useEffect(() => {
-    if (orderSuccess && !hasFiredPixelRef.current) {
+    if (orderSuccess && !orderSuccess.isDuplicate && !hasFiredPixelRef.current) {
       hasFiredPixelRef.current = true;
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
     }
@@ -279,8 +281,12 @@ export default function AlgerianWatchLandingPage() {
         setHasOrderedCookie();
       }
 
-      // Fire Meta Pixel Purchase event EXACTLY ONCE for real, non-duplicate orders
-      if (!data.isDuplicate && data.orderId) {
+      // META-SAFETY: Fire Meta Pixel Purchase EXACTLY ONCE for real, non-duplicate orders.
+      // Duplicate path (isDuplicate === true) MUST NEVER fire any pixel event.
+      // This is the ONLY trackFBPixel('Purchase') call in the app (verified) and it is
+      // blocked here + by per-orderId once-guards in isPurchasePixelAlreadyFired().
+      const isDuplicateOrder = data.isDuplicate === true;
+      if (!isDuplicateOrder && data.orderId) {
         const orderId = String(data.orderId);
         if (!isPurchasePixelAlreadyFired(orderId)) {
           trackFBPixel(
@@ -299,7 +305,31 @@ export default function AlgerianWatchLandingPage() {
         }
       }
 
-      setOrderSuccess({ orderId: data.orderId, ...orderPayload });
+      // Duplicate path: show the ORIGINAL order info returned by the API
+      // (original orderId + original payload), never the just-typed draft as "new".
+      if (isDuplicateOrder && data.order && typeof data.order === 'object') {
+        const orig = data.order as Partial<OrderSuccessData> & {
+          fullName?: string; phone?: string; wilayaName?: string; communeName?: string;
+          deliveryType?: string; addressDetails?: string; totalPrice?: number;
+          selectedModels?: OrderSuccessData['selectedModels'];
+        };
+        setOrderSuccess({
+          orderId: String(data.orderId),
+          fullName: typeof orig.fullName === 'string' && orig.fullName ? orig.fullName : orderPayload.fullName,
+          phone: typeof orig.phone === 'string' && orig.phone ? orig.phone : orderPayload.phone,
+          wilayaName: typeof orig.wilayaName === 'string' && orig.wilayaName ? orig.wilayaName : orderPayload.wilayaName,
+          communeName: typeof orig.communeName === 'string' && orig.communeName ? orig.communeName : orderPayload.communeName,
+          deliveryType: typeof orig.deliveryType === 'string' && orig.deliveryType ? orig.deliveryType : orderPayload.deliveryType,
+          addressDetails: typeof orig.addressDetails === 'string' ? orig.addressDetails : orderPayload.addressDetails,
+          totalPrice: typeof orig.totalPrice === 'number' ? orig.totalPrice : orderPayload.totalPrice,
+          selectedModels: Array.isArray(orig.selectedModels) && orig.selectedModels.length > 0
+            ? orig.selectedModels
+            : orderPayload.selectedModels,
+          isDuplicate: true
+        });
+      } else {
+        setOrderSuccess({ orderId: data.orderId, ...orderPayload, isDuplicate: isDuplicateOrder || false });
+      }
     } catch (err: unknown) {
       const e = err as Error;
       setErrorMessage(e.message || 'حدث خطأ غير متوقع.');
@@ -309,6 +339,70 @@ export default function AlgerianWatchLandingPage() {
   };
 
   if (orderSuccess) {
+    // Duplicate path: prominent call notice, original order details, original order id.
+    // No "new order" wording, no Meta Purchase (blocked in handleSubmitOrder).
+    if (orderSuccess.isDuplicate) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12" dir="rtl">
+          <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 sm:p-8 text-center border-t-8 border-amber-500">
+            <div className="bg-amber-50 text-amber-900 rounded-xl p-4 mb-5 text-sm font-black border border-amber-300 leading-relaxed shadow-sm">
+              ⚠️ طلبك مسجّل مسبقاً — سنتصل بك قريباً على <span className="font-black" dir="ltr">{orderSuccess.phone}</span> لتأكيد الشحن.
+              <br />
+              <span className="font-bold">لا حاجة لإعادة الطلب، فريقنا سيتصل بك هاتفياً.</span>
+            </div>
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-10 h-10 text-amber-600" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 mb-2">طلبك موجود عندنا ✅</h1>
+            <p className="text-slate-500 mb-6 text-sm">رقم الطلب الأصلي: <span className="font-bold text-slate-700">{orderSuccess.orderId}</span></p>
+
+            <div className="bg-slate-50 rounded-xl p-4 mb-4 text-right border border-slate-100">
+              <h3 className="font-black text-slate-800 border-b border-slate-200 pb-2 mb-3">تفاصيل طلبك المسجّل:</h3>
+
+              {/* Product Details */}
+              <div className="flex gap-4 items-center bg-white p-3 rounded-xl border border-slate-100 mb-4 shadow-sm">
+                <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
+                  <Image src={orderSuccess.selectedModels[0]?.image || '/logo.png'} alt="Product" fill sizes="64px" className="object-contain p-1" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-[#222355] mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
+                  <p className="text-xs font-bold text-slate-500">الكمية: 1 • الدفع عند الاستلام</p>
+                </div>
+              </div>
+
+              {/* Customer Details */}
+              <div className="text-sm text-slate-700 space-y-2.5">
+                <p className="flex justify-between border-b border-slate-100 pb-1.5">
+                  <span className="text-slate-500">الاسم:</span>
+                  <strong className="text-slate-900">{orderSuccess.fullName}</strong>
+                </p>
+                <p className="flex justify-between border-b border-slate-100 pb-1.5">
+                  <span className="text-slate-500">الهاتف:</span>
+                  <strong className="text-[#222355] font-black" dir="ltr">{orderSuccess.phone}</strong>
+                </p>
+                <p className="flex justify-between border-b border-slate-100 pb-1.5">
+                  <span className="text-slate-500">العنوان:</span>
+                  <strong className="text-slate-900">{orderSuccess.wilayaName}، {orderSuccess.communeName}</strong>
+                </p>
+                <p className="flex justify-between pt-1">
+                  <span className="font-bold text-slate-800">المبلغ الإجمالي:</span>
+                  <span className="font-black text-[#DC2626] text-lg">{orderSuccess.totalPrice} دج</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-green-50 text-green-800 rounded-xl p-4 mb-6 text-sm font-bold border border-green-200 leading-relaxed shadow-sm">
+              سنتصل بك هاتفياً قريباً جداً على رقم هاتفك لتأكيد الطلب وشحنه إليك.
+            </div>
+
+            <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#222355] hover:bg-[#1a1b40] text-white rounded-xl font-bold shadow-md transition-all active:scale-95">
+              العودة للرئيسية
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12" dir="rtl">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 sm:p-8 text-center border-t-8 border-[#222355]">

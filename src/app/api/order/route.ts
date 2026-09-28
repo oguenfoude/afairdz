@@ -6,7 +6,46 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30; // Max execution duration for external APIs (Google Sheets + SMTP)
 
 // In-memory cache for Rate Limiting / Anti-Spam
-const orderCache = new Map<string, number>();
+// Stores the last order payload per phone so duplicates return REAL order info.
+const orderCache = new Map<string, { timestamp: number; order: OrderData }>();
+const DOUBLE_CLICK_MS = 60 * 1000; // 60 seconds double-click guard
+const SAME_PHONE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h same-phone notice window
+
+function logDuplicateAttempt(cleanPhone: string, original: OrderData) {
+  // Best-effort local log only — never throws, never affects the response.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    const csvFile = path.join(dataDir, 'duplicates.csv');
+    const fileExists = fs.existsSync(csvFile);
+    const modelNames = original.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
+    const row = [
+      `"${new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Algiers' })}"`,
+      `"${original.orderId}"`,
+      `"${original.fullName}"`,
+      `"${cleanPhone}"`,
+      `"${original.wilayaName} (${original.wilayaId})"`,
+      `"${original.communeName}"`,
+      `"${modelNames}"`,
+      original.totalPrice,
+      `"مكرر — سنتصل بالزبون"`
+    ].join(',');
+    if (!fileExists) {
+      const header = '"تاريخ المحاولة المكررة","رقم الطلب الأصلي","الاسم","الهاتف","الولاية","البلدية","الموديل","المجموع (دج)","الحالة"\n';
+      fs.writeFileSync(csvFile, '\uFEFF' + header + row + '\n', 'utf8');
+    } else {
+      fs.appendFileSync(csvFile, row + '\n', 'utf8');
+    }
+  } catch (e) {
+    console.warn('⚠️ [Duplicate Log Error]', e);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,28 +58,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Anti-Spam: prevent rapid double-clicks for the same phone number within 60 seconds
+    // Anti-Spam: 60s double-click guard + 24h same-phone notice window.
+    // Duplicates return the ORIGINAL orderId + ORIGINAL payload (never random ids),
+    // never touch Google Sheets as a new order, never send admin email, never count for Meta.
     const cleanPhone = body.phone.trim().replace(/[\s\-]/g, '');
     const phoneKey = `phone_${cleanPhone}`;
     const now = Date.now();
-    const cooldownMs = 60 * 1000; // 60 seconds cooldown
 
     // Clean cache if large
     if (orderCache.size > 10000) {
       orderCache.clear();
     }
 
-    if (orderCache.has(phoneKey) && (now - orderCache.get(phoneKey)!) < cooldownMs) {
-      console.log(`[AntiSpam] Duplicate order prevented for Phone: ${cleanPhone}`);
+    const cached = orderCache.get(phoneKey);
+    if (cached && (now - cached.timestamp) < SAME_PHONE_WINDOW_MS) {
+      const isDoubleClick = (now - cached.timestamp) < DOUBLE_CLICK_MS;
+      console.log(`[AntiSpam] Duplicate order (${isDoubleClick ? 'double-click' : 'same-phone 24h'}) for Phone: ${cleanPhone}, original: ${cached.order.orderId}`);
+      // Best-effort seller callback log (local CSV + console only, never fails response)
+      try {
+        logDuplicateAttempt(cleanPhone, cached.order);
+      } catch { /* never fail */ }
       return NextResponse.json({
         success: true,
         isDuplicate: true,
-        orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
-        message: 'تم تأكيد طلبك بنجاح! لقد قمنا بتسجيل طلبك وسنتصل بك هاتفياً لتأكيد الشحن.'
+        orderId: cached.order.orderId,
+        order: cached.order,
+        message: 'طلبك مسجّل مسبقاً — سنتصل بك هاتفياً لتأكيد الشحن.'
       });
     }
-
-    orderCache.set(phoneKey, now);
 
     const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
     const createdAt = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Algiers' });
@@ -63,6 +108,10 @@ export async function POST(req: NextRequest) {
       notes: body.notes ? body.notes.trim() : undefined,
       createdAt
     };
+
+    // Register in-flight order immediately so rapid double-clicks during
+    // the Sheets/email round-trip also resolve to this ORIGINAL orderId.
+    orderCache.set(phoneKey, { timestamp: now, order: orderData });
 
     // =========================================================================
     // STEP 1: STORE IN GOOGLE SHEETS & LOCAL CSV FIRST
@@ -104,8 +153,8 @@ export async function POST(req: NextRequest) {
     console.log(`[Order Flow] 3/3 Updating email status to "${finalEmailStatus}"...`);
     await updateOrderEmailStatus(orderData.orderId, finalEmailStatus, sheetSyncResult?.rowNumber);
 
-    // Record the successful order in the AntiSpam cache
-    orderCache.set(phoneKey, now);
+    // Refresh the successful order in the AntiSpam cache with final payload
+    orderCache.set(phoneKey, { timestamp: now, order: orderData });
 
     return NextResponse.json({
       success: true,
