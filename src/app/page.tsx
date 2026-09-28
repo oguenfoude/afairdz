@@ -55,7 +55,7 @@ const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
 };
 
 export default function AlgerianWatchLandingPage() {
-  const [selectedModel, setSelectedModel] = useState<WatchModel>(WATCH_MODELS[0]);
+  const [selectedModel, setSelectedModel] = useState<WatchModel | null>(null);
 
   // Form Inputs
   const [fullName, setFullName] = useState('');
@@ -75,12 +75,14 @@ export default function AlgerianWatchLandingPage() {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const handleNextImage = () => {
+    if (!selectedModel) { setSelectedModel(WATCH_MODELS[0]); return; }
     const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
     const nextIndex = (currentIndex + 1) % WATCH_MODELS.length;
     setSelectedModel(WATCH_MODELS[nextIndex]);
   };
 
   const handlePrevImage = () => {
+    if (!selectedModel) { setSelectedModel(WATCH_MODELS[WATCH_MODELS.length - 1]); return; }
     const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
     const prevIndex = currentIndex === 0 ? WATCH_MODELS.length - 1 : currentIndex - 1;
     setSelectedModel(WATCH_MODELS[prevIndex]);
@@ -142,8 +144,9 @@ export default function AlgerianWatchLandingPage() {
       }
     }
 
-    // Strict validation: must have filled ALL form fields completely!
+    // Strict validation: must have filled ALL form fields completely, including model!
     if (
+      !selectedModel ||
       fullName.trim().length < 2 ||
       !/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone) ||
       !wilayaId ||
@@ -239,6 +242,8 @@ export default function AlgerianWatchLandingPage() {
     setErrorMessage('');
 
     if (!fullName.trim()) { setErrorMessage('يرجى إدخال الاسم واللقب.'); return; }
+    if (!selectedModel) { setErrorMessage('يرجى اختيار الموديل المطلوب أولاً.'); return; }
+    const model = selectedModel;
     if (!/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) { setErrorMessage('يرجى إدخال رقم هاتف جزائري صحيح.'); return; }
     if (!wilayaId) { setErrorMessage('يرجى اختيار ولاية التوصيل.'); return; }
     if (!communeName) { setErrorMessage('يرجى اختيار البلدية.'); return; }
@@ -261,9 +266,9 @@ export default function AlgerianWatchLandingPage() {
         deliveryFee: currentDeliveryFee,
         totalPrice,
         selectedModels: [{
-          modelId: selectedModel.id,
-          modelName: selectedModel.name,
-          image: selectedModel.image
+          modelId: model.id,
+          modelName: model.name,
+          image: model.image
         }]
       };
 
@@ -295,8 +300,8 @@ export default function AlgerianWatchLandingPage() {
               value: orderPayload.totalPrice,
               currency: process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_CURRENCY || 'USD',
               content_type: 'product',
-              content_name: selectedModel.name,
-              content_ids: [String(selectedModel.id)],
+              content_name: model.name,
+              content_ids: [String(model.id)],
               num_items: 1,
               order_id: orderId
             },
@@ -519,18 +524,28 @@ export default function AlgerianWatchLandingPage() {
 
           {/* Model Number Badge Floating on Top */}
           <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-sm font-black shadow-lg border border-white/20">
-            {selectedModel.name}
+            {selectedModel ? selectedModel.name : 'اختر الموديل 👇'}
           </div>
-          <Image
-            key={selectedModel.id}
-            src={selectedModel.image}
-            alt={selectedModel.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 800px"
-            priority
-            loading="eager"
-            className="object-contain"
-          />
+          {selectedModel ? (
+            <Image
+              key={selectedModel.id}
+              src={selectedModel.image}
+              alt={selectedModel.name}
+              fill
+              sizes="(max-width: 768px) 100vw, 800px"
+              priority
+              loading="eager"
+              className="object-contain"
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center">
+              <div className="w-20 h-20 rounded-full bg-[#222355]/10 flex items-center justify-center">
+                <ShoppingBag className="w-10 h-10 text-[#222355]" />
+              </div>
+              <p className="font-black text-slate-700 text-lg">اختر الموديل أولاً</p>
+              <p className="text-sm text-slate-500 font-bold">اضغط على أحد الموديلات بالأسفل لعرضه هنا</p>
+            </div>
+          )}
         </div>
 
         {/* Image Gallery Thumbnails */}
@@ -542,7 +557,7 @@ export default function AlgerianWatchLandingPage() {
                 onClick={() => setSelectedModel(model)}
                 type="button"
                 className={`relative w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 snap-start bg-slate-50 transition-all ${
-                  selectedModel.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-70'
+                  selectedModel?.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-70'
                 }`}
               >
                 <Image src={model.image} alt={model.name} fill sizes="64px" className="object-cover p-1" />
@@ -591,13 +606,14 @@ export default function AlgerianWatchLandingPage() {
               <div className="relative">
                 <select
                   id="modelSelectForm"
-                  value={selectedModel.id}
+                  value={selectedModel?.id ?? ''}
                   onChange={(e) => {
                     const model = WATCH_MODELS.find(m => m.id === Number(e.target.value));
-                    if (model) setSelectedModel(model);
+                    setSelectedModel(model ?? null);
                   }}
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"
                 >
+                  <option value="">-- اختر الموديل --</option>
                   {WATCH_MODELS.map(model => (
                     <option key={model.id} value={model.id}>{model.name}</option>
                   ))}
