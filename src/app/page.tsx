@@ -74,15 +74,35 @@ export default function AlgerianWatchLandingPage() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
+  // Slideshow preview: images rotate on their own until the user picks a model.
+  // Preview is display-only — selection stays null until an explicit pick.
+  const [previewIndex, setPreviewIndex] = useState(0);
+
+  useEffect(() => {
+    if (selectedModel) return;
+    const timer = setInterval(() => {
+      setPreviewIndex((i) => (i + 1) % WATCH_MODELS.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [selectedModel]);
+
+  const displayModel = selectedModel ?? WATCH_MODELS[previewIndex];
+
   const handleNextImage = () => {
-    if (!selectedModel) { setSelectedModel(WATCH_MODELS[0]); return; }
+    if (!selectedModel) {
+      setPreviewIndex((i) => (i + 1) % WATCH_MODELS.length);
+      return;
+    }
     const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
     const nextIndex = (currentIndex + 1) % WATCH_MODELS.length;
     setSelectedModel(WATCH_MODELS[nextIndex]);
   };
 
   const handlePrevImage = () => {
-    if (!selectedModel) { setSelectedModel(WATCH_MODELS[WATCH_MODELS.length - 1]); return; }
+    if (!selectedModel) {
+      setPreviewIndex((i) => (i - 1 + WATCH_MODELS.length) % WATCH_MODELS.length);
+      return;
+    }
     const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
     const prevIndex = currentIndex === 0 ? WATCH_MODELS.length - 1 : currentIndex - 1;
     setSelectedModel(WATCH_MODELS[prevIndex]);
@@ -524,26 +544,23 @@ export default function AlgerianWatchLandingPage() {
 
           {/* Model Number Badge Floating on Top */}
           <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-sm font-black shadow-lg border border-white/20">
-            {selectedModel ? selectedModel.name : 'اختر الموديل 👇'}
+            {selectedModel ? selectedModel.name : `${displayModel.name} — للعرض`}
           </div>
-          {selectedModel ? (
-            <Image
-              key={selectedModel.id}
-              src={selectedModel.image}
-              alt={selectedModel.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 800px"
-              priority
-              loading="eager"
-              className="object-contain"
-            />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-[#222355]/10 flex items-center justify-center">
-                <ShoppingBag className="w-10 h-10 text-[#222355]" />
-              </div>
-              <p className="font-black text-slate-700 text-lg">اختر الموديل أولاً</p>
-              <p className="text-sm text-slate-500 font-bold">اضغط على أحد الموديلات بالأسفل لعرضه هنا</p>
+          <Image
+            key={displayModel.id}
+            src={displayModel.image}
+            alt={displayModel.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 800px"
+            priority
+            loading="eager"
+            className="object-contain"
+          />
+          {!selectedModel && (
+            <div className="absolute bottom-4 inset-x-0 z-10 flex justify-center pointer-events-none">
+              <span className="bg-white/85 text-[#222355] px-4 py-1.5 rounded-full text-xs font-black shadow">
+                الصور للعرض — اختر موديلك من الأسفل 👇
+              </span>
             </div>
           )}
         </div>
