@@ -66,17 +66,16 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ succes
     console.error('⚠️ [Local CSV Backup Error]', err);
   }
 
-  // 2. Google Sheets API Sync (Columns A to P)
+  // 2. Google Sheets API Sync (Columns A to P ONLY).
+  // NOTE: cols Q:R belong to the external SMS sender — never write beyond P.
+  // The model image stays in the admin email + local CSV backup, not in the sheet.
   try {
     const modelNames = order.selectedModels.map(m => m.modelName).join(' + ') || 'غير محدد';
     const formattedPhone = order.phone.startsWith('0') ? `'${order.phone}` : order.phone;
-    const firstImage = order.selectedModels[0]?.image;
-    const imageUrl = firstImage ? `https://afairdz.vercel.app${firstImage.startsWith('/') ? firstImage : `/${firstImage}`}` : '';
-    const imageFormula = imageUrl ? `=IMAGE("${imageUrl}")` : '';
 
     const appendRes = await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_SPREADSHEET_ID,
-      range: 'الطلبات المؤكدة!A:Q',
+      range: 'الطلبات المؤكدة!A:P',
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -97,8 +96,7 @@ export async function syncOrderToGoogleSheet(order: OrderData): Promise<{ succes
             order.totalPrice,
             '⏳ قيد التأكيد',
             order.notes || '',
-            '⏳ قيد الإرسال',
-            imageFormula
+            '⏳ قيد الإرسال'
           ]
         ]
       }
