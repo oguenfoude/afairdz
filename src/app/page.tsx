@@ -20,7 +20,7 @@ import {
   Commune
 } from '@/data/wilayas';
 import { trackFBPixel } from '@/components/FacebookPixel';
-import { WATCH_MODELS, WatchModel } from '@/data/products';
+import { WATCH_MODELS, AVAILABLE_MODELS, WatchModel } from '@/data/products';
 
 interface OrderSuccessData {
   orderId: string;
@@ -81,31 +81,31 @@ export default function AlgerianWatchLandingPage() {
   useEffect(() => {
     if (selectedModel) return;
     const timer = setInterval(() => {
-      setPreviewIndex((i) => (i + 1) % WATCH_MODELS.length);
+      setPreviewIndex((i) => (i + 1) % AVAILABLE_MODELS.length);
     }, 3000);
     return () => clearInterval(timer);
   }, [selectedModel]);
 
-  const displayModel = selectedModel ?? WATCH_MODELS[previewIndex];
+  const displayModel = selectedModel ?? AVAILABLE_MODELS[previewIndex];
 
   const handleNextImage = () => {
     if (!selectedModel) {
-      setPreviewIndex((i) => (i + 1) % WATCH_MODELS.length);
+      setPreviewIndex((i) => (i + 1) % AVAILABLE_MODELS.length);
       return;
     }
-    const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
-    const nextIndex = (currentIndex + 1) % WATCH_MODELS.length;
-    setSelectedModel(WATCH_MODELS[nextIndex]);
+    const currentIndex = AVAILABLE_MODELS.findIndex(m => m.id === selectedModel.id);
+    const nextIndex = (currentIndex + 1) % AVAILABLE_MODELS.length;
+    setSelectedModel(AVAILABLE_MODELS[nextIndex]);
   };
 
   const handlePrevImage = () => {
     if (!selectedModel) {
-      setPreviewIndex((i) => (i - 1 + WATCH_MODELS.length) % WATCH_MODELS.length);
+      setPreviewIndex((i) => (i - 1 + AVAILABLE_MODELS.length) % AVAILABLE_MODELS.length);
       return;
     }
-    const currentIndex = WATCH_MODELS.findIndex(m => m.id === selectedModel.id);
-    const prevIndex = currentIndex === 0 ? WATCH_MODELS.length - 1 : currentIndex - 1;
-    setSelectedModel(WATCH_MODELS[prevIndex]);
+    const currentIndex = AVAILABLE_MODELS.findIndex(m => m.id === selectedModel.id);
+    const prevIndex = currentIndex === 0 ? AVAILABLE_MODELS.length - 1 : currentIndex - 1;
+    setSelectedModel(AVAILABLE_MODELS[prevIndex]);
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -568,7 +568,7 @@ export default function AlgerianWatchLandingPage() {
         {/* Image Gallery Thumbnails */}
         <div className="px-4 py-4 border-b border-slate-100 bg-white">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
-            {WATCH_MODELS.map((model) => (
+            {AVAILABLE_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => setSelectedModel(model)}
@@ -625,13 +625,13 @@ export default function AlgerianWatchLandingPage() {
                   id="modelSelectForm"
                   value={selectedModel?.id ?? ''}
                   onChange={(e) => {
-                    const model = WATCH_MODELS.find(m => m.id === Number(e.target.value));
+                    const model = AVAILABLE_MODELS.find(m => m.id === Number(e.target.value));
                     setSelectedModel(model ?? null);
                   }}
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"
                 >
                   <option value="">-- اختر الموديل --</option>
-                  {WATCH_MODELS.map(model => (
+                  {AVAILABLE_MODELS.map(model => (
                     <option key={model.id} value={model.id}>{model.name}</option>
                   ))}
                 </select>

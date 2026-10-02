@@ -5,6 +5,8 @@ export interface WatchModel {
   badge?: string;
   colorName?: string;
   description?: string;
+  /** false = out of stock, hidden from gallery/dropdown but kept for order history */
+  available?: boolean;
 }
 
 export const WATCH_MODELS: WatchModel[] = [
@@ -15,10 +17,13 @@ export const WATCH_MODELS: WatchModel[] = [
   { id: 5, name: "الموديل 5", image: "/images/products/16.webp" },
   { id: 6, name: "الموديل 6", image: "/images/products/6.webp" },
   { id: 7, name: "الموديل 7", image: "/images/products/8.webp" },
-  { id: 8, name: "الموديل 8", image: "/images/products/17.webp" },
+  { id: 8, name: "الموديل 8", image: "/images/products/17.webp", available: false },
   { id: 9, name: "الموديل 9", image: "/images/products/18.webp" },
   { id: 10, name: "الموديل 10", image: "/images/products/1.webp" }
 ];
+
+/** Models customers can currently order (out-of-stock hidden, history intact) */
+export const AVAILABLE_MODELS: WatchModel[] = WATCH_MODELS.filter(m => m.available !== false);
 
 export interface PackageOffer {
   quantity: number;
