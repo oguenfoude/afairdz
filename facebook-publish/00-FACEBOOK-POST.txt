@@ -1,0 +1,23 @@
+FACEBOOK POST — copy/paste (Arabic)
+
+🚚 أسعار التوصيل لـ 58 ولاية — الدفع عند الاستلام ✅
+جهزنا لكم ملف منظم فيه كل الولايات والبلديات مع أسعار التوصيل (منزل + مكتب).
+
+📁 الملفات المرفقة:
+1) Excel — جدولين مفلترين: ملخص الولايات + كل البلديات (1542)
+2) CSV — للذين يستعملون Excel/Google Sheets
+3) JSON — للمطورين
+
+طريقة الاستعمال: افتح ملف Excel → اختر ولايتك من الفلتر → شوف بلديتك وسعر التوصيل.
+أي خطأ في السعر؟ اكتب لنا: رقم الولاية + البلدية في التعليقات 👇
+
+#توصيل #الدفع_عند_الاستلام #الجزائر
+
+---
+Files in this folder (share these on Facebook as attachments):
+- 04-delivery-fees-facebook.xlsx ← best for most users (filtered tables)
+- 02-communes-1542.csv ← full communes list
+- 03-wilayas-58-summary.csv ← 58 wilayas summary
+- 01-wilayas-58.json ← developers only
+
+Tip: on Facebook upload the .xlsx + write the post above. Put CSV/JSON in first comment or Google Drive link.
