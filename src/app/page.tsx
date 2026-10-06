@@ -74,17 +74,10 @@ export default function AlgerianWatchLandingPage() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Slideshow preview: images rotate on their own until the user picks a model.
+  // Manual preview: arrows/swipe move through images only when nothing is picked.
+  // No auto-slide — the viewer stays still until the user acts.
   // Preview is display-only — selection stays null until an explicit pick.
   const [previewIndex, setPreviewIndex] = useState(0);
-
-  useEffect(() => {
-    if (selectedModel) return;
-    const timer = setInterval(() => {
-      setPreviewIndex((i) => (i + 1) % AVAILABLE_MODELS.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [selectedModel]);
 
   const displayModel = selectedModel ?? AVAILABLE_MODELS[previewIndex];
 
