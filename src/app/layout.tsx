@@ -39,7 +39,7 @@ export const metadata: Metadata = {
         alt: "Affaire DZ Logo"
       },
       {
-        url: "/images/products/24.jpg",
+        url: "/images/products/24.webp",
         width: 800,
         height: 800,
         alt: "طقم ساعة يد رجالية - Affaire DZ"
