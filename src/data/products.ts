@@ -16,7 +16,7 @@ export const WATCH_MODELS: WatchModel[] = [
   { id: 4, name: "الموديل 4", image: "/images/products/7.webp" },
   { id: 5, name: "الموديل 5", image: "/images/products/16.webp" },
   { id: 6, name: "الموديل 6", image: "/images/products/6.webp" },
-  { id: 7, name: "الموديل 7", image: "/images/products/8.webp" },
+  { id: 7, name: "الموديل 7", image: "/images/products/8.webp", available: false },
   { id: 8, name: "الموديل 8", image: "/images/products/18.webp" },
   { id: 9, name: "الموديل 9", image: "/images/products/1.webp" },
   { id: 10, name: "الموديل 10", image: "/images/products/23.webp" }
