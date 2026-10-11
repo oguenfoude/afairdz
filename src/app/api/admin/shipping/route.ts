@@ -3,6 +3,8 @@ import { getFeeOverrides, saveFeeOverrides } from '@/lib/data';
 import type { FeeOverride } from '@/lib/fallback';
 import { checkAdmin } from '@/lib/adminGuard';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const overrides = await getFeeOverrides();
   return NextResponse.json(overrides);

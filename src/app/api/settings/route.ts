@@ -1,5 +1,7 @@
 import { getSettings, getPackages } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const [settings, packages] = await Promise.all([getSettings(), getPackages()]);
   return Response.json(

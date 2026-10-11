@@ -1,5 +1,7 @@
 import { getFeeOverrides } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const overrides = await getFeeOverrides();
   return Response.json(overrides, {

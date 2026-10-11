@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSettings, getPackages, saveSettings, savePackages } from '@/lib/data';
+import { getSettings, getPackages } from '@/lib/data';
+import { putBlobJson, SETTINGS_KEY } from '@/lib/blob';
 import type { PackageOffer } from '@/lib/fallback';
 import { checkAdmin } from '@/lib/adminGuard';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const [settings, packages] = await Promise.all([getSettings(), getPackages()]);
@@ -11,19 +14,16 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const guard = checkAdmin(req);
   if (guard) return guard;
-  
+
   try {
     const body = await req.json();
-    
-    if (body.packages && Array.isArray(body.packages)) {
-      await savePackages(body.packages);
-    }
-    
-    const { packages, ...rest } = body;
-    if (Object.keys(rest).length > 0) {
-      await saveSettings(rest);
-    }
-    
+    // Single atomic write: read once, merge, write once (two sequential puts race and wipe each other)
+    const current = await getSettings();
+    const merged: { packages?: PackageOffer[]; notices?: string } = { ...current };
+    if (Array.isArray(body.packages)) merged.packages = body.packages as PackageOffer[];
+    if (typeof body.notices === 'string') merged.notices = body.notices;
+    await putBlobJson(SETTINGS_KEY, merged);
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : '';

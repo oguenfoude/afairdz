@@ -3,6 +3,8 @@ import { getModels, saveModels } from '@/lib/data';
 import type { WatchModel } from '@/lib/fallback';
 import { checkAdmin } from '@/lib/adminGuard';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const models = await getModels();
   return NextResponse.json(models);
