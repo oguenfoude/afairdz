@@ -32,6 +32,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url, filename });
   } catch (e) {
     console.error('Upload error:', e);
-    return NextResponse.json({ error: 'فشل الرفع' }, { status: 500 });
+    const msg = e instanceof Error ? e.message : '';
+    if (msg.startsWith('BLOB_NO_TOKEN') || msg.startsWith('BLOB_PRIVATE_STORE')) {
+      return NextResponse.json({ error: msg.split(': ').slice(1).join(': ') }, { status: 500 });
+    }
+    if (msg.includes(' sharp') || msg.toLowerCase().includes('unsupported')) {
+      return NextResponse.json({ error: 'صيغة الصورة غير مدعومة — استعمل JPG أو PNG أو WebP' }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'فشل الرفع — حاول مرة أخرى' }, { status: 500 });
   }
 }

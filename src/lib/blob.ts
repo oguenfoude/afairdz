@@ -16,25 +16,63 @@ export async function getBlobJson<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
+function friendlyBlobError(e: unknown): Error {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (msg.includes('No blob credentials') || msg.includes('BLOB_READ_WRITE_TOKEN')) {
+    return new Error('BLOB_NO_TOKEN: أضف BLOB_READ_WRITE_TOKEN في Vercel ثم أعد النشر');
+  }
+  if (msg.toLowerCase().includes('private')) {
+    return new Error('BLOB_PRIVATE_STORE: متجر Blob خاص — اجعله Public من Vercel (Storage → Blob → Settings) أو أنشئ متجراً عاماً جديداً وحدّث التوكن');
+  }
+  return e instanceof Error ? e : new Error(msg);
+}
+
 export async function putBlobJson(key: string, data: unknown) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN not set');
-  const blob = await put(key, JSON.stringify(data, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    contentType: 'application/json',
-  });
-  return blob.url;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('BLOB_NO_TOKEN: أضف BLOB_READ_WRITE_TOKEN في Vercel ثم أعد النشر');
+  try {
+    const blob = await put(key, JSON.stringify(data, null, 2), {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+    });
+    return blob.url;
+  } catch (e) {
+    throw friendlyBlobError(e);
+  }
 }
 
 export async function uploadImage(file: File, filename: string) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN not set');
-  const buffer = await file.arrayBuffer();
-  const blob = await put(`models/${filename}`, Buffer.from(buffer), {
-    access: 'public',
-    addRandomSuffix: false,
-    contentType: 'image/webp',
-  });
-  return blob.url;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('BLOB_NO_TOKEN: أضف BLOB_READ_WRITE_TOKEN في Vercel ثم أعد النشر');
+  try {
+    const buffer = await file.arrayBuffer();
+    const blob = await put(`models/${filename}`, Buffer.from(buffer), {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'image/webp',
+    });
+    return blob.url;
+  } catch (e) {
+    throw friendlyBlobError(e);
+  }
+}
+
+/** Real writability probe: writes then deletes a tiny file, no junk left behind */
+export async function probeBlobWrite(): Promise<{ writable: boolean; reason?: string }> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return { writable: false, reason: 'no-token' };
+  const key = 'health-probe.json';
+  try {
+    await put(key, JSON.stringify({ ok: 1 }), {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+    });
+    try { await del(key); } catch { /* probe file may linger, harmless */ }
+    return { writable: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.toLowerCase().includes('private')) return { writable: false, reason: 'private-store' };
+    return { writable: false, reason: 'unreachable' };
+  }
 }
 
 export async function deleteImage(filename: string) {

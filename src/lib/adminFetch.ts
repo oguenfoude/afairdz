@@ -19,8 +19,11 @@ export async function adminFetch(input: RequestInfo, init: RequestInit = {}) {
   
   const headers = new Headers(init.headers);
   headers.set('x-admin-password', pw);
-  headers.set('Content-Type', 'application/json');
-  
+  // Only force JSON for string bodies — never for FormData uploads
+  if (typeof init.body === 'string' && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const res = await fetch(input, { ...init, headers });
   
   if (res.status === 401) {

@@ -29,8 +29,12 @@ export async function PUT(req: NextRequest) {
       .filter(o => o.home !== undefined || o.office !== undefined);
     await saveFeeOverrides(validated);
     return NextResponse.json({ ok: true, overrides: validated });
-  } catch {
-    return NextResponse.json({ error: 'فشل الحفظ' }, { status: 500 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '';
+    if (msg.startsWith('BLOB_NO_TOKEN') || msg.startsWith('BLOB_PRIVATE_STORE')) {
+      return NextResponse.json({ error: msg.split(': ').slice(1).join(': ') }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'فشل الحفظ — حاول مرة أخرى' }, { status: 500 });
   }
 }
 

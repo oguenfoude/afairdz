@@ -116,13 +116,7 @@ export default function AdminModels() {
     try {
       const form = new FormData();
       form.append('file', file);
-      // upload needs multipart: build headers manually (adminFetch sets JSON content-type, so do it here)
-      const pw = sessionStorage.getItem('admin_pw');
-      const res = await fetch('/api/admin/models/upload', {
-        method: 'POST',
-        headers: { 'x-admin-password': pw || '' },
-        body: form,
-      });
+      const res = await adminFetch('/api/admin/models/upload', { method: 'POST', body: form });
       const data = await res.json();
       if (res.ok && data.url) {
         if (showAdd) setNewModel({ ...newModel, image: data.url });

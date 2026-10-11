@@ -8,6 +8,8 @@ import { adminFetch } from '@/lib/adminFetch';
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [blobOk, setBlobOk] = useState(true);
+  const [blobReason, setBlobReason] = useState<string | null>(null);
   const [stats, setStats] = useState({ available: 0, disabled: 0, overrides: 0, packages: 0 });
 
   useEffect(() => {
@@ -15,8 +17,13 @@ export default function AdminDashboard() {
       adminFetch('/api/admin/models').then(r => r.json()),
       adminFetch('/api/admin/settings').then(r => r.json()),
       adminFetch('/api/admin/shipping').then(r => r.json()),
+      adminFetch('/api/admin/health').then(r => r.json()).catch(() => ({ blob: true })),
     ])
-      .then(([models, settings, shipping]) => {
+      .then(([models, settings, shipping, health]) => {
+        if (health && health.blob === false) {
+          setBlobOk(false);
+          setBlobReason(health.blobReason ?? 'unreachable');
+        }
         const list = Array.isArray(models) ? models : [];
         setStats({
           available: list.filter((m: { available: boolean }) => m.available).length,
@@ -45,6 +52,14 @@ export default function AdminDashboard() {
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
+      )}
+
+      {!blobOk && (
+        <div className="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl text-sm font-bold leading-relaxed">
+          {blobReason === 'private-store'
+            ? '⚠️ متجر Blob خاص — الحفظ لن يعمل. اجعله Public من Vercel (Storage → Blob → Settings) أو أنشئ متجراً عاماً جديداً وحدّث BLOB_READ_WRITE_TOKEN ثم أعد النشر.'
+            : '⚠️ التخزين غير مهيأ — الحفظ لن يعمل. أضف BLOB_READ_WRITE_TOKEN في Vercel لكل البيئات ثم أعد النشر.'}
+        </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
