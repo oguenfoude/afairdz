@@ -546,6 +546,9 @@ export default function AlgerianWatchLandingPage() {
         <h1 className="px-4 text-xl sm:text-2xl font-black text-slate-900 leading-tight mb-2">
           الساعة الأكثر طلباً: طقم ساعة رجالية فاخرة + خاتم وبراسلي مجاناً
         </h1>
+        <p className="px-4 text-base sm:text-lg font-black text-[#222355] leading-tight mb-2">
+          🎁 الهدية الأمثل لأحبائكم
+        </p>
 
         {/* Reviews snippet */}
         <div className="px-4 flex items-center gap-1 mb-4">
@@ -632,6 +635,9 @@ export default function AlgerianWatchLandingPage() {
             ))}
           </div>
           )}
+          <p className="pt-2 text-center text-xs font-bold text-slate-500">
+            📸 ملاحظة: كل الصور حقيقية مصورة من طرفنا
+          </p>
         </div>
 
         {/* Quick Highlights */}
