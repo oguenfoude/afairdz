@@ -14,7 +14,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
   
-  const token = getTokenFromCookie(req.headers.get('cookie'));
+  const cookieHeader = req.headers.get('cookie');
+  console.log('[MIDDLEWARE] Path:', pathname, 'Cookie:', cookieHeader);
+  const token = getTokenFromCookie(cookieHeader);
+  console.log('[MIDDLEWARE] Token:', token ? 'present' : 'missing');
   if (!token) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,6 +26,7 @@ export async function middleware(req: NextRequest) {
   }
   
   const isValid = await verifySession(token);
+  console.log('[MIDDLEWARE] Valid:', isValid);
   if (!isValid) {
     const res = pathname.startsWith('/api/')
       ? NextResponse.json({ error: 'Invalid session' }, { status: 401 })

@@ -23,8 +23,11 @@ export async function POST(req: NextRequest) {
     }
     
     const token = await createSession();
+    console.log('[LOGIN] Token created, setting cookie');
     const res = NextResponse.json({ ok: true });
-    res.headers.set('Set-Cookie', getSessionCookie(token));
+    const cookie = getSessionCookie(token);
+    console.log('[LOGIN] Set-Cookie:', cookie);
+    res.headers.set('Set-Cookie', cookie);
     return res;
   } catch {
     return NextResponse.json({ error: 'طلب غير صالح' }, { status: 400 });
