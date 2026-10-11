@@ -5,7 +5,7 @@ import FacebookPixel from "@/components/FacebookPixel";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["500", "700", "800", "900"],
   variable: "--font-cairo",
   display: "swap",
 });
@@ -65,6 +65,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <head>
         <link rel="icon" href="/logo.png" />
+        <link rel="preconnect" href="https://i.imgur.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://i.imgur.com" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
       </head>
       <body className="font-sans bg-slate-50 text-slate-900 antialiased selection:bg-[#222355] selection:text-white">
         <FacebookPixel />

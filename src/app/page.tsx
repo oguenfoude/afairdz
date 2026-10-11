@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
   ShoppingBag,
@@ -168,7 +167,8 @@ export default function AlgerianWatchLandingPage() {
   useEffect(() => {
     if (orderSuccess && !orderSuccess.isDuplicate && !hasFiredPixelRef.current) {
       hasFiredPixelRef.current = true;
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+      // Loaded on demand so first paint stays light
+      import('canvas-confetti').then(m => m.default({ particleCount: 150, spread: 80, origin: { y: 0.5 } })).catch(() => {});
     }
   }, [orderSuccess]);
 
@@ -591,6 +591,7 @@ export default function AlgerianWatchLandingPage() {
             fill
             sizes="(max-width: 768px) 100vw, 800px"
             priority
+            fetchPriority="high"
             loading="eager"
             className="object-contain"
           />
@@ -623,7 +624,7 @@ export default function AlgerianWatchLandingPage() {
                   selectedModel?.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-70'
                 }`}
               >
-                <Image src={model.image} alt={model.name} fill sizes="64px" className="object-cover p-1" />
+                <Image src={model.image} alt={model.name} fill sizes="64px" loading="lazy" decoding="async" className="object-cover p-1" />
                 <span className="absolute bottom-0 inset-x-0 bg-[#222355]/85 text-white text-[10px] font-bold py-0.5 text-center leading-tight">
                   {model.name}
                 </span>
