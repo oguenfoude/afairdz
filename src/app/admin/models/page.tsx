@@ -56,8 +56,9 @@ export default function AdminModels() {
 
   useEffect(() => { fetchModels(); }, []);
 
+  /** Order is the truth: position i => order i+1 AND name الموديل i+1 */
   const renumber = (list: WatchModel[]) => {
-    list.forEach((m, i) => { m.order = i + 1; });
+    list.forEach((m, i) => { m.order = i + 1; m.name = `الموديل ${i + 1}`; });
     return list;
   };
 
@@ -89,14 +90,14 @@ export default function AdminModels() {
   };
 
   const handleAdd = () => {
-    if (!newModel.name || !newModel.image) {
-      setError('الاسم والصورة مطلوبان');
+    if (!newModel.image) {
+      setError('الصورة مطلوبة (الاسم تلقائي حسب الترتيب)');
       return;
     }
     setError('');
     const model: WatchModel = {
       id: `m${Date.now()}`,
-      name: newModel.name,
+      name: newModel.name || `الموديل ${models.length + 1}`,
       image: newModel.image,
       badge: newModel.badge,
       colorName: newModel.colorName,
@@ -104,7 +105,7 @@ export default function AdminModels() {
       available: newModel.available ?? true,
       order: models.length + 1,
     };
-    setModels([...models, model]);
+    setModels(renumber([...models, model]));
     setShowAdd(false);
     setNewModel({ name: '', image: '', badge: '', colorName: '', description: '', available: true });
   };
@@ -183,7 +184,7 @@ export default function AdminModels() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">إدارة الموديلات</h1>
-          <p className="text-slate-500 mt-1">اسحب للترتيب، أو استعمل الأسهم — ثم اضغط حفظ</p>
+          <p className="text-slate-500 mt-1">اسحب للترتيب أو استعمل الأسهم — الترقيم (الموديل 1، 2، 3...) يتبع الترتيب تلقائياً، ثم اضغط حفظ</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
@@ -296,13 +297,13 @@ export default function AdminModels() {
             <h2 className="text-xl font-bold text-slate-900 mb-4">إضافة موديل جديد</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">الاسم</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">الاسم (تلقائي حسب الترتيب: الموديل {models.length + 1})</label>
                 <input
                   type="text"
                   value={newModel.name}
                   onChange={e => setNewModel({ ...newModel, name: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
-                  placeholder="مثال: الموديل 12"
+                  placeholder={`سيصبح الموديل ${models.length + 1} تلقائياً`}
                 />
               </div>
               <div>
@@ -356,7 +357,7 @@ export default function AdminModels() {
                 />
                 <span className="text-sm text-slate-600">متاح للطلب</span>
               </label>
-              <p className="text-xs text-amber-600">ستضاف للقائمة — لا تنس الضغط على «حفظ التغييرات» بالأسفل.</p>
+              <p className="text-xs text-amber-600">ستضاف في الأخير برقمها التلقائي — لا تنس الضغط على «حفظ التغييرات» بالأسفل.</p>
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
                 <button onClick={() => setShowAdd(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">إلغاء</button>
                 <button onClick={handleAdd} className="px-4 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] transition-colors">إضافة للقائمة</button>
