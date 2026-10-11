@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Upload, Save, GripVertical } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Upload, GripVertical } from 'lucide-react';
 import { adminFetch } from '@/lib/adminFetch';
+import SaveBar from '@/components/admin/SaveBar';
+import Toast from '@/components/admin/Toast';
 
 interface WatchModel {
   id: string;
@@ -15,8 +17,11 @@ interface WatchModel {
   order: number;
 }
 
+const snapshot = (m: WatchModel[]) => JSON.stringify(m);
+
 export default function AdminModels() {
   const [models, setModels] = useState<WatchModel[]>([]);
+  const [initial, setInitial] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -27,13 +32,20 @@ export default function AdminModels() {
   });
   const [uploading, setUploading] = useState(false);
   const [editingUpload, setEditingUpload] = useState<number | null>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dropIdx, setDropIdx] = useState<number | null>(null);
+  const dragIdxRef = useRef<number | null>(null);
+
+  const dirty = snapshot(models) !== initial && initial !== '';
 
   const fetchModels = async () => {
     try {
       const res = await adminFetch('/api/admin/models');
       if (res.ok) {
-        const data = await res.json();
-        setModels(data.sort((a: WatchModel, b: WatchModel) => a.order - b.order));
+        const data = (await res.json()) as WatchModel[];
+        const sorted = data.sort((a, b) => a.order - b.order);
+        setModels(sorted);
+        setInitial(snapshot(sorted));
       }
     } catch {
       setError('فشل تحميل الموديلات');
@@ -44,6 +56,11 @@ export default function AdminModels() {
 
   useEffect(() => { fetchModels(); }, []);
 
+  const renumber = (list: WatchModel[]) => {
+    list.forEach((m, i) => { m.order = i + 1; });
+    return list;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError(''); setSuccess('');
@@ -53,8 +70,8 @@ export default function AdminModels() {
         body: JSON.stringify(models),
       });
       if (res.ok) {
-        setSuccess('تم الحفظ بنجاح');
-        setTimeout(() => setSuccess(''), 3000);
+        setInitial(snapshot(models));
+        setSuccess('تم الحفظ بنجاح — المتجر تحدث');
       } else {
         setError('فشل الحفظ');
       }
@@ -65,12 +82,17 @@ export default function AdminModels() {
     }
   };
 
-  const handleAdd = async () => {
+  const handleReset = () => {
+    try {
+      setModels(JSON.parse(initial));
+    } catch { fetchModels(); }
+  };
+
+  const handleAdd = () => {
     if (!newModel.name || !newModel.image) {
       setError('الاسم والصورة مطلوبان');
       return;
     }
-    setSaving(true);
     setError('');
     const model: WatchModel = {
       id: `m${Date.now()}`,
@@ -85,7 +107,6 @@ export default function AdminModels() {
     setModels([...models, model]);
     setShowAdd(false);
     setNewModel({ name: '', image: '', badge: '', colorName: '', description: '', available: true });
-    setSaving(false);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,13 +116,18 @@ export default function AdminModels() {
     try {
       const form = new FormData();
       form.append('file', file);
-      const res = await adminFetch('/api/admin/models/upload', { method: 'POST', body: form });
+      // upload needs multipart: build headers manually (adminFetch sets JSON content-type, so do it here)
+      const pw = sessionStorage.getItem('admin_pw');
+      const res = await fetch('/api/admin/models/upload', {
+        method: 'POST',
+        headers: { 'x-admin-password': pw || '' },
+        body: form,
+      });
       const data = await res.json();
       if (res.ok && data.url) {
         if (showAdd) setNewModel({ ...newModel, image: data.url });
         else setModels(models.map((m, i) => i === editingUpload ? { ...m, image: data.url } : m));
-        setSuccess('تم رفع الصورة');
-        setTimeout(() => setSuccess(''), 2000);
+        setSuccess('تم رفع الصورة — اضغط حفظ');
       } else {
         setError(data.error || 'فشل الرفع');
       }
@@ -109,35 +135,49 @@ export default function AdminModels() {
       setError('حدث خطأ في الرفع');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
-  const moveUp = (index: number) => {
-    if (index === 0) return;
-    const newModels = [...models];
-    [newModels[index - 1], newModels[index]] = [newModels[index], newModels[index - 1]];
-    newModels.forEach((m, i) => m.order = i + 1);
-    setModels(newModels);
+  const move = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= models.length || to >= models.length) return;
+    const list = [...models];
+    const [item] = list.splice(from, 1);
+    list.splice(to, 0, item);
+    setModels(renumber(list));
   };
 
-  const moveDown = (index: number) => {
-    if (index === models.length - 1) return;
-    const newModels = [...models];
-    [newModels[index], newModels[index + 1]] = [newModels[index + 1], newModels[index]];
-    newModels.forEach((m, i) => m.order = i + 1);
-    setModels(newModels);
+  const moveUp = (i: number) => move(i, i - 1);
+  const moveDown = (i: number) => move(i, i + 1);
+
+  const onDragStart = (i: number) => {
+    dragIdxRef.current = i;
+    setDragIdx(i);
+  };
+  const onDragOverRow = (e: React.DragEvent, i: number) => {
+    e.preventDefault();
+    if (dragIdxRef.current !== null && dragIdxRef.current !== i) setDropIdx(i);
+  };
+  const onDropRow = (i: number) => {
+    const from = dragIdxRef.current;
+    dragIdxRef.current = null;
+    setDragIdx(null);
+    setDropIdx(null);
+    if (from !== null) move(from, i);
+  };
+  const onDragEnd = () => {
+    dragIdxRef.current = null;
+    setDragIdx(null);
+    setDropIdx(null);
   };
 
   const toggleAvailable = (index: number) => {
-    const newModels = models.map((m, i) => i === index ? { ...m, available: !m.available } : m);
-    setModels(newModels);
+    setModels(models.map((m, i) => i === index ? { ...m, available: !m.available } : m));
   };
 
   const removeModel = (index: number) => {
     if (!confirm('حذف هذا الموديل؟ سيبقى في سجل الطلبات السابقة.')) return;
-    const newModels = models.filter((_, i) => i !== index);
-    newModels.forEach((m, i) => m.order = i + 1);
-    setModels(newModels);
+    setModels(renumber(models.filter((_, i) => i !== index)));
   };
 
   if (loading) {
@@ -145,11 +185,11 @@ export default function AdminModels() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">إدارة الموديلات</h1>
-          <p className="text-slate-500 mt-1">أضف، رتّب، أو عطّل الموديلات المعروضة في المتجر</p>
+          <p className="text-slate-500 mt-1">اسحب للترتيب، أو استعمل الأسهم — ثم اضغط حفظ</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
@@ -159,36 +199,48 @@ export default function AdminModels() {
         </button>
       </div>
 
-      {(error || success) && (
-        <div className={`p-4 rounded-lg ${error ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
-          {error || success}
-        </div>
-      )}
+      <Toast msg={error} type="error" onDone={() => setError('')} />
+      <Toast msg={success} type="success" onDone={() => setSuccess('')} />
 
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="p-3 text-right font-medium text-slate-500 w-12">الترتيب</th>
+                <th className="p-3 text-right font-medium text-slate-500 w-24">الترتيب</th>
                 <th className="p-3 text-right font-medium text-slate-500 w-16">صورة</th>
                 <th className="p-3 text-right font-medium text-slate-500">الاسم</th>
                 <th className="p-3 text-right font-medium text-slate-500 w-32">الحالة</th>
-                <th className="p-3 text-right font-medium text-slate-500 w-48">الإجراءات</th>
+                <th className="p-3 text-right font-medium text-slate-500 w-40">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {models.map((model, index) => (
-                <tr key={model.id} className="hover:bg-slate-50">
+                <tr
+                  key={model.id}
+                  draggable
+                  onDragStart={() => onDragStart(index)}
+                  onDragOver={(e) => onDragOverRow(e, index)}
+                  onDrop={() => onDropRow(index)}
+                  onDragEnd={onDragEnd}
+                  className={`hover:bg-slate-50 transition-colors ${
+                    dropIdx === index ? 'border-t-4 border-t-[#222355] bg-[#222355]/5' : ''
+                  } ${dragIdx === index ? 'opacity-40' : ''}`}
+                >
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => moveUp(index)} disabled={index === 0} className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30"><GripVertical className="h-4 w-4" /></button>
-                      <span className="text-sm text-slate-600 w-6 text-center">{index + 1}</span>
-                      <button onClick={() => moveDown(index)} disabled={index === models.length - 1} className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30"><GripVertical className="h-4 w-4 rotate-180" /></button>
+                      <span title="اسحب للترتيب" className="cursor-grab active:cursor-grabbing p-1 text-slate-400">
+                        <GripVertical className="h-5 w-5" />
+                      </span>
+                      <span className="text-sm font-bold text-slate-700 w-6 text-center">{index + 1}</span>
+                      <div className="flex flex-col">
+                        <button onClick={() => moveUp(index)} disabled={index === 0} className="p-0.5 text-slate-400 hover:text-[#222355] disabled:opacity-30 text-xs leading-none">▲</button>
+                        <button onClick={() => moveDown(index)} disabled={index === models.length - 1} className="p-0.5 text-slate-400 hover:text-[#222355] disabled:opacity-30 text-xs leading-none">▼</button>
+                      </div>
                     </div>
                   </td>
                   <td className="p-2">
-                    <img src={model.image} alt={model.name} className="w-12 h-12 object-cover rounded-lg" />
+                    <img src={model.image} alt={model.name} className="w-12 h-12 object-cover rounded-lg" draggable={false} />
                   </td>
                   <td className="p-3">
                     <input
@@ -240,18 +292,9 @@ export default function AdminModels() {
             </tbody>
           </table>
         </div>
-        
-        <div className="p-4 border-t border-slate-200 flex justify-end">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] disabled:opacity-50 transition-colors"
-          >
-            <Save className="h-4 w-4" />
-            {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-          </button>
-        </div>
       </div>
+
+      <SaveBar dirty={dirty} saving={saving} onSave={handleSave} onReset={handleReset} />
 
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowAdd(false)}>
@@ -288,35 +331,27 @@ export default function AdminModels() {
                   <input id="new-upload" type="file" accept="image/*" onChange={handleUpload} className="hidden" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">الشعار (اختياري)</label>
-                <input
-                  type="text"
-                  value={newModel.badge || ''}
-                  onChange={e => setNewModel({ ...newModel, badge: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
-                  placeholder="مثال: الأكثر مبيعاً"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">اسم اللون (اختياري)</label>
-                <input
-                  type="text"
-                  value={newModel.colorName || ''}
-                  onChange={e => setNewModel({ ...newModel, colorName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
-                  placeholder="مثال: فضي"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">الوصف (اختياري)</label>
-                <textarea
-                  value={newModel.description || ''}
-                  onChange={e => setNewModel({ ...newModel, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
-                  placeholder="وصف قصير للموديل"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">الشعار</label>
+                  <input
+                    type="text"
+                    value={newModel.badge || ''}
+                    onChange={e => setNewModel({ ...newModel, badge: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none"
+                    placeholder="الأكثر مبيعاً"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">اللون</label>
+                  <input
+                    type="text"
+                    value={newModel.colorName || ''}
+                    onChange={e => setNewModel({ ...newModel, colorName: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none"
+                    placeholder="فضي"
+                  />
+                </div>
               </div>
               <label className="flex items-center gap-2">
                 <input
@@ -327,11 +362,10 @@ export default function AdminModels() {
                 />
                 <span className="text-sm text-slate-600">متاح للطلب</span>
               </label>
+              <p className="text-xs text-amber-600">ستضاف للقائمة — لا تنس الضغط على «حفظ التغييرات» بالأسفل.</p>
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
                 <button onClick={() => setShowAdd(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">إلغاء</button>
-                <button onClick={handleAdd} disabled={saving} className="px-4 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] disabled:opacity-50 transition-colors">
-                  {saving ? 'جاري الإضافة...' : 'إضافة'}
-                </button>
+                <button onClick={handleAdd} className="px-4 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] transition-colors">إضافة للقائمة</button>
               </div>
             </div>
           </div>

@@ -74,6 +74,9 @@ export default function AlgerianWatchLandingPage() {
   const [selectedModel, setSelectedModel] = useState<WatchModel | null>(null);
   const [availableModels, setAvailableModels] = useState<WatchModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(true);
+  const [packages, setPackages] = useState<{ totalPrice: number; originalTotal: number }[]>([]);
+  const [notices, setNotices] = useState('');
+  const [feeOverrides, setFeeOverrides] = useState<{ wilayaId: number; communeId?: number; home?: number; office?: number }[]>([]);
 
   // Form Inputs
   const [fullName, setFullName] = useState('');
@@ -98,15 +101,20 @@ export default function AlgerianWatchLandingPage() {
   const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
-    fetch('/api/models')
-      .then(r => r.json())
-      .then(data => {
-        const avail = data.filter((m: WatchModel) => m.available !== false)
-          .sort((a: WatchModel, b: WatchModel) => (a.order || 0) - (b.order || 0));
-        setAvailableModels(avail);
-        setModelsLoading(false);
-      })
-      .catch(() => setModelsLoading(false));
+    Promise.all([
+      fetch('/api/models').then(r => r.json()).catch(() => []),
+      fetch('/api/settings').then(r => r.json()).catch(() => ({})),
+      fetch('/api/fees').then(r => r.json()).catch(() => []),
+    ]).then(([modelsData, settingsData, feesData]) => {
+      const avail = (Array.isArray(modelsData) ? modelsData : [])
+        .filter((m: WatchModel) => m.available !== false)
+        .sort((a: WatchModel, b: WatchModel) => (a.order || 0) - (b.order || 0));
+      setAvailableModels(avail);
+      if (Array.isArray(settingsData?.packages)) setPackages(settingsData.packages);
+      if (typeof settingsData?.notices === 'string') setNotices(settingsData.notices);
+      if (Array.isArray(feesData)) setFeeOverrides(feesData);
+      setModelsLoading(false);
+    }).catch(() => setModelsLoading(false));
   }, []);
 
   const displayModel = selectedModel ?? availableModels[previewIndex] ?? { id: 0, name: '', image: '/logo.png' };
@@ -168,12 +176,19 @@ export default function AlgerianWatchLandingPage() {
   const communesList: Commune[] = wilayaId ? getAllCommunesForWilaya(Number(wilayaId)) : [];
   const currentCommune = communesList.find(c => c.commune_name === communeName);
 
-  const domicileFee = currentCommune?.domicile?.fee_da ?? 700;
-  const deskFee = currentCommune?.stop_desk?.fee_da ?? 500;
+  // Admin overrides win: commune-level first, then wilaya default, then bundled static fee
+  const wilayaOverride = wilayaId ? feeOverrides.find(o => o.wilayaId === Number(wilayaId) && !o.communeId) : undefined;
+  const communeOverride = wilayaId && currentCommune
+    ? feeOverrides.find(o => o.wilayaId === Number(wilayaId) && o.communeId === currentCommune.commune_id)
+    : undefined;
+
+  const domicileFee = communeOverride?.home ?? wilayaOverride?.home ?? currentCommune?.domicile?.fee_da ?? 700;
+  const deskFee = communeOverride?.office ?? wilayaOverride?.office ?? currentCommune?.stop_desk?.fee_da ?? 500;
   const currentDeliveryFee = deliveryType === 'desk' ? deskFee : domicileFee;
 
-  const productPrice = 1500;
-  const originalPrice = 3000;
+  // Admin packages win: first package = single-watch price shown on landing
+  const productPrice = packages[0]?.totalPrice ?? 1500;
+  const originalPrice = packages[0]?.originalTotal ?? 3000;
   const totalPrice = productPrice + currentDeliveryFee;
 
   const hasLocation = Boolean(wilayaId && communeName);
@@ -509,9 +524,9 @@ export default function AlgerianWatchLandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 lg:pb-0" dir="rtl">
-      {/* Notice Bar */}
-      <aside className="bg-[#DC2626] text-white text-sm font-bold py-2 text-center sticky top-0 z-50">
-        توصيل 58 ولاية و الدفع عند الاستلام
+      {/* Notice Bar — admin notices win, default fallback */}
+      <aside className="bg-[#DC2626] text-white text-sm font-bold py-2 px-4 text-center sticky top-0 z-50">
+        {notices.trim() ? notices.trim() : 'توصيل 58 ولاية و الدفع عند الاستلام'}
       </aside>
 
       {/* Header */}
@@ -590,6 +605,14 @@ export default function AlgerianWatchLandingPage() {
 
         {/* Image Gallery Thumbnails */}
         <div className="px-4 py-4 border-b border-slate-100 bg-white">
+          {modelsLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#222355] border-t-transparent" />
+              <span className="mr-3 text-sm font-bold text-slate-500">جاري تحميل الموديلات...</span>
+            </div>
+          ) : availableModels.length === 0 ? (
+            <p className="text-center text-sm font-bold text-slate-500 py-6">لا توجد موديلات متاحة حالياً — عد قريباً</p>
+          ) : (
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
             {availableModels.map((model) => (
               <button
@@ -607,6 +630,7 @@ export default function AlgerianWatchLandingPage() {
               </button>
             ))}
           </div>
+          )}
         </div>
 
         {/* Quick Highlights */}

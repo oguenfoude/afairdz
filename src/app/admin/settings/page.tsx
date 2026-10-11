@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { adminFetch } from '@/lib/adminFetch';
+import SaveBar from '@/components/admin/SaveBar';
+import Toast from '@/components/admin/Toast';
 
 interface PackageOffer {
   quantity: number;
@@ -17,18 +19,25 @@ interface PackageOffer {
 export default function AdminSettings() {
   const [packages, setPackages] = useState<PackageOffer[]>([]);
   const [notices, setNotices] = useState('');
+  const [initial, setInitial] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+
+  const snap = (p: PackageOffer[], n: string) => JSON.stringify({ p, n });
+  const dirty = initial !== '' && snap(packages, notices) !== initial;
 
   const fetchData = async () => {
     try {
       const res = await adminFetch('/api/admin/settings');
       if (res.ok) {
         const data = await res.json();
-        setPackages(data.packages || []);
-        setNotices(data.notices || '');
+        const pkgs = data.packages || [];
+        const nts = data.notices || '';
+        setPackages(pkgs);
+        setNotices(nts);
+        setInitial(snap(pkgs, nts));
       }
     } catch {
       setError('فشل التحميل');
@@ -47,8 +56,8 @@ export default function AdminSettings() {
         body: JSON.stringify({ packages, notices }),
       });
       if (res.ok) {
-        setSuccess('تم الحفظ بنجاح');
-        setTimeout(() => setSuccess(''), 3000);
+        setInitial(snap(packages, notices));
+        setSuccess('تم الحفظ بنجاح — الأسعار والإشعارات تحدثت في المتجر');
       } else {
         setError('فشل الحفظ');
       }
@@ -57,6 +66,14 @@ export default function AdminSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleReset = () => {
+    try {
+      const parsed = JSON.parse(initial);
+      setPackages(parsed.p);
+      setNotices(parsed.n);
+    } catch { fetchData(); }
   };
 
   const addPackage = () => {
@@ -102,22 +119,19 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">الإعدادات</h1>
-          <p className="text-slate-500 mt-1">باقات الأسعار والإشعارات</p>
+          <p className="text-slate-500 mt-1">باقات الأسعار والإشعارات — تظهر مباشرة في المتجر بعد الحفظ</p>
         </div>
         <button onClick={addPackage} className="inline-flex items-center gap-2 px-4 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] transition-colors">
           <Plus className="h-4 w-4" /> إضافة باقة
         </button>
       </div>
 
-      {(error || success) && (
-        <div className={`p-4 rounded-lg ${error ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
-          {error || success}
-        </div>
-      )}
+      <Toast msg={error} type="error" onDone={() => setError('')} />
+      <Toast msg={success} type="success" onDone={() => setSuccess('')} />
 
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">باقات الأسعار</h2>
@@ -218,16 +232,7 @@ export default function AdminSettings() {
         <p className="text-sm text-slate-500 mt-2">يدعم HTML بسيط. سيظهر في أعلى الصفحة.</p>
       </div>
 
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="inline-flex items-center gap-2 px-6 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] disabled:opacity-50 transition-colors"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? 'جاري الحفظ...' : 'حفظ جميع الإعدادات'}
-        </button>
-      </div>
+      <SaveBar dirty={dirty} saving={saving} onSave={handleSave} onReset={handleReset} label="حفظ جميع الإعدادات" />
     </div>
   );
 }

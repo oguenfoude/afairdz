@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw } from 'lucide-react';
 import { adminFetch } from '@/lib/adminFetch';
+import SaveBar from '@/components/admin/SaveBar';
+import Toast from '@/components/admin/Toast';
 
 interface FeeOverride {
   wilayaId: number;
@@ -35,11 +37,15 @@ const WILAYAS = [
 
 export default function AdminShipping() {
   const [overrides, setOverrides] = useState<FeeOverride[]>([]);
+  const [initial, setInitial] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [selectedWilaya, setSelectedWilaya] = useState<number>(1);
   const [search, setSearch] = useState('');
+
+  const dirty = initial !== '' && JSON.stringify(overrides) !== initial;
 
   const fetchOverrides = async () => {
     try {
@@ -47,6 +53,7 @@ export default function AdminShipping() {
       if (res.ok) {
         const data = await res.json();
         setOverrides(data);
+        setInitial(JSON.stringify(data));
       }
     } catch {
       setError('فشل التحميل');
@@ -57,36 +64,69 @@ export default function AdminShipping() {
 
   useEffect(() => { fetchOverrides(); }, []);
 
-  const getWilayaOverrides = () => overrides.filter(o => o.wilayaId === selectedWilaya && !o.communeId);
-  const getCommuneOverrides = () => overrides.filter(o => o.wilayaId === selectedWilaya && o.communeId);
-
-  const handleChange = async (override: FeeOverride) => {
-    const newOverrides = overrides.filter(o => 
-      !(o.wilayaId === override.wilayaId && o.communeId === override.communeId)
-    );
-    if (override.home !== undefined || override.office !== undefined) {
-      newOverrides.push(override);
-    }
-    setOverrides(newOverrides);
-    
+  const handleSave = async () => {
+    setSaving(true); setError(''); setSuccess('');
     try {
-      await adminFetch('/api/admin/shipping', {
-        method: 'PATCH',
-        body: JSON.stringify(override),
+      const res = await adminFetch('/api/admin/shipping', {
+        method: 'PUT',
+        body: JSON.stringify(overrides),
       });
+      if (res.ok) {
+        setInitial(JSON.stringify(overrides));
+        setSuccess('تم الحفظ بنجاح — رسوم التوصيل تحدثت في المتجر');
+      } else {
+        setError('فشل الحفظ');
+      }
     } catch {
-      setError('فشل المزامنة مع الخادم');
-      setTimeout(() => setError(''), 3000);
-      fetchOverrides();
+      setError('حدث خطأ');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleInputChange = (override: FeeOverride, field: 'home' | 'office', value: string) => {
-    if (value === '') return;
+  const handleReset = () => {
+    try { setOverrides(JSON.parse(initial)); }
+    catch { fetchOverrides(); }
+  };
+
+  // Local staged edit (no auto-PATCH): SaveBar commits everything at once
+  const setWilayaFee = (field: 'home' | 'office', value: string) => {
+    const val = value === '' ? undefined : parseInt(value, 10);
+    if (value !== '' && (val === undefined || isNaN(val))) return;
+    const rest = overrides.filter(o => !(o.wilayaId === selectedWilaya && !o.communeId));
+    const cur = overrides.find(o => o.wilayaId === selectedWilaya && !o.communeId);
+    const next: FeeOverride = { wilayaId: selectedWilaya, home: cur?.home, office: cur?.office, [field]: val };
+    if (next.home === undefined && next.office === undefined) {
+      setOverrides(rest);
+    } else {
+      setOverrides([...rest, next]);
+    }
+  };
+
+  const setCommuneFee = (communeId: number, field: 'home' | 'office', value: string) => {
+    if (value === '') {
+      const cur = overrides.find(o => o.wilayaId === selectedWilaya && o.communeId === communeId);
+      if (!cur) return;
+      const next = { ...cur, [field]: undefined };
+      if (next.home === undefined && next.office === undefined) {
+        setOverrides(overrides.filter(o => !(o.wilayaId === selectedWilaya && o.communeId === communeId)));
+      } else {
+        setOverrides(overrides.map(o => (o.wilayaId === selectedWilaya && o.communeId === communeId) ? next : o));
+      }
+      return;
+    }
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) return;
-    handleChange({ ...override, [field]: parsed });
+    const cur = overrides.find(o => o.wilayaId === selectedWilaya && o.communeId === communeId);
+    if (cur) {
+      setOverrides(overrides.map(o => (o.wilayaId === selectedWilaya && o.communeId === communeId) ? { ...o, [field]: parsed } : o));
+    } else {
+      setOverrides([...overrides, { wilayaId: selectedWilaya, communeId, [field]: parsed }]);
+    }
   };
+
+  const getWilayaOverride = () => overrides.find(o => o.wilayaId === selectedWilaya && !o.communeId);
+  const getCommuneOverrides = () => overrides.filter(o => o.wilayaId === selectedWilaya && o.communeId);
 
   const wilaya = WILAYAS.find(w => w.id === selectedWilaya);
 
@@ -95,22 +135,19 @@ export default function AdminShipping() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">رسوم التوصيل</h1>
-          <p className="text-slate-500 mt-1">عدل رسوم التوصيل للمنزل والمكتب لكل ولاية (استثناءات فقط، الباقي من الملف الأساسي)</p>
+          <p className="text-slate-500 mt-1">عدّل ثم اضغط حفظ — الاستثناءات فقط، الباقي من الملف الأساسي</p>
         </div>
-        <button onClick={fetchOverrides} disabled={loading} className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="تحديث">
-          <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+        <button onClick={fetchOverrides} className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="تحديث">
+          <RefreshCw className="h-5 w-5" />
         </button>
       </div>
 
-      {(error || success) && (
-        <div className={`p-4 rounded-lg ${error ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
-          {error || success}
-        </div>
-      )}
+      <Toast msg={error} type="error" onDone={() => setError('')} />
+      <Toast msg={success} type="success" onDone={() => setSuccess('')} />
 
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex flex-wrap gap-4 mb-6">
@@ -127,14 +164,14 @@ export default function AdminShipping() {
             </select>
           </div>
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-slate-700 mb-1">بحث في البلديات</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">بحث برقم البلدية</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="اسم البلدية..."
+                placeholder="رقم البلدية..."
                 className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
               />
             </div>
@@ -148,11 +185,8 @@ export default function AdminShipping() {
               <label className="block text-sm font-medium text-slate-700 mb-1">رسوم التوصيل للمنزل (دج)</label>
               <input
                 type="number"
-                value={getWilayaOverrides()[0]?.home ?? ''}
-                onChange={e => {
-                  const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
-                  handleChange({ wilayaId: selectedWilaya, home: val, office: getWilayaOverrides()[0]?.office });
-                }}
+                value={getWilayaOverride()?.home ?? ''}
+                onChange={e => setWilayaFee('home', e.target.value)}
                 placeholder="اترك فارغاً للافتراضي"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
                 min="0"
@@ -162,20 +196,15 @@ export default function AdminShipping() {
               <label className="block text-sm font-medium text-slate-700 mb-1">رسوم المكتب/الإيقاف (دج)</label>
               <input
                 type="number"
-                value={getWilayaOverrides()[0]?.office ?? ''}
-                onChange={e => {
-                  const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
-                  handleChange({ wilayaId: selectedWilaya, home: getWilayaOverrides()[0]?.home, office: val });
-                }}
+                value={getWilayaOverride()?.office ?? ''}
+                onChange={e => setWilayaFee('office', e.target.value)}
                 placeholder="اترك فارغاً للافتراضي"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
                 min="0"
               />
             </div>
           </div>
-          {getWilayaOverrides()[0] && (
-            <p className="text-xs text-slate-500 mt-2">القيم الفارغة = استخدام الرسوم الافتراضية من الملف الأساسي</p>
-          )}
+          <p className="text-xs text-slate-500 mt-2">القيم الفارغة = استخدام الرسوم الافتراضية من الملف الأساسي</p>
         </div>
 
         <h3 className="font-medium text-slate-900 mb-3">استثناءات البلديات ({wilaya?.name})</h3>
@@ -196,7 +225,7 @@ export default function AdminShipping() {
                     <input
                       type="number"
                       value={override.home ?? ''}
-                      onChange={e => handleInputChange(override, 'home', e.target.value)}
+                      onChange={e => override.communeId && setCommuneFee(override.communeId, 'home', e.target.value)}
                       placeholder="افتراضي"
                       className="w-full px-3 py-1 border border-slate-200 rounded-lg text-sm focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
                       min="0"
@@ -206,7 +235,7 @@ export default function AdminShipping() {
                     <input
                       type="number"
                       value={override.office ?? ''}
-                      onChange={e => handleInputChange(override, 'office', e.target.value)}
+                      onChange={e => override.communeId && setCommuneFee(override.communeId, 'office', e.target.value)}
                       placeholder="افتراضي"
                       className="w-full px-3 py-1 border border-slate-200 rounded-lg text-sm focus:ring-1 focus:ring-[#222355] focus:border-transparent outline-none"
                       min="0"
@@ -217,10 +246,12 @@ export default function AdminShipping() {
             </tbody>
           </table>
           {getCommuneOverrides().length === 0 && (
-            <p className="text-center text-slate-500 py-8">لا توجد استثناءات لهذه الولاية. أضفها من ملف البيانات الأساسي أو عبر API.</p>
+            <p className="text-center text-slate-500 py-8">لا توجد استثناءات لهذه الولاية — عدّل حقلي الولاية أعلاه لإضافة استثناء.</p>
           )}
         </div>
       </div>
+
+      <SaveBar dirty={dirty} saving={saving} onSave={handleSave} onReset={handleReset} label="حفظ رسوم التوصيل" />
     </div>
   );
 }

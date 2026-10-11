@@ -2,38 +2,53 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Package, Truck, Settings, Plus } from 'lucide-react';
+import { Package, Truck, Settings, Plus, EyeOff } from 'lucide-react';
 import { adminFetch } from '@/lib/adminFetch';
 
 export default function AdminDashboard() {
-  const [modelCount, setModelCount] = useState('—');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [stats, setStats] = useState({ available: 0, disabled: 0, overrides: 0, packages: 0 });
 
   useEffect(() => {
-    adminFetch('/api/admin/models')
-      .then(r => r.json())
-      .then(data => setModelCount(data.filter((m: any) => m.available).length))
-      .catch(() => setModelCount('—'))
+    Promise.all([
+      adminFetch('/api/admin/models').then(r => r.json()),
+      adminFetch('/api/admin/settings').then(r => r.json()),
+      adminFetch('/api/admin/shipping').then(r => r.json()),
+    ])
+      .then(([models, settings, shipping]) => {
+        const list = Array.isArray(models) ? models : [];
+        setStats({
+          available: list.filter((m: { available: boolean }) => m.available).length,
+          disabled: list.filter((m: { available: boolean }) => !m.available).length,
+          overrides: Array.isArray(shipping) ? shipping.length : 0,
+          packages: Array.isArray(settings?.packages) ? settings.packages.length : 0,
+        });
+      })
+      .catch(() => setError('فشل تحميل الإحصائيات'))
       .finally(() => setLoading(false));
   }, []);
 
-  const stats = [
-    { label: 'الموديلات', value: loading ? '...' : modelCount, href: '/admin/models', icon: Package, color: 'bg-blue-100 text-blue-600' },
-    { label: 'الوليات المفعّلة', value: '58', href: '/admin/shipping', icon: Truck, color: 'bg-green-100 text-green-600' },
-    { label: 'باقات الأسعار', value: '3', href: '/admin/settings', icon: Settings, color: 'bg-purple-100 text-purple-600' },
+  const cards = [
+    { label: 'موديلات متاحة', value: loading ? '...' : stats.available, href: '/admin/models', icon: Package, color: 'bg-blue-100 text-blue-600' },
+    { label: 'موديلات معطّلة', value: loading ? '...' : stats.disabled, href: '/admin/models', icon: EyeOff, color: 'bg-amber-100 text-amber-600' },
+    { label: 'استثناءات التوصيل', value: loading ? '...' : stats.overrides, href: '/admin/shipping', icon: Truck, color: 'bg-green-100 text-green-600' },
+    { label: 'باقات الأسعار', value: loading ? '...' : stats.packages, href: '/admin/settings', icon: Settings, color: 'bg-purple-100 text-purple-600' },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">لوحة التحكم</h1>
-          <p className="text-slate-500 mt-1">إدارة متجر Affaire DZ</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">لوحة التحكم</h1>
+        <p className="text-slate-500 mt-1">إدارة متجر Affaire DZ — كل الأرقام حية من قاعدة البيانات</p>
       </div>
-      
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat, i) => {
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link
@@ -54,7 +69,7 @@ export default function AdminDashboard() {
           );
         })}
       </div>
-      
+
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">إجراءات سريعة</h2>
         <div className="flex flex-wrap gap-3">
@@ -62,7 +77,7 @@ export default function AdminDashboard() {
             href="/admin/models"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#222355] text-white rounded-lg hover:bg-[#1a1b4a] text-sm font-medium transition-colors"
           >
-            <Plus className="h-4 w-4" /> إضافة موديل
+            <Plus className="h-4 w-4" /> إدارة الموديلات
           </Link>
           <Link
             href="/admin/shipping"
