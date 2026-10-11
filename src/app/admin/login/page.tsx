@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { setAdminPassword } from '@/lib/adminFetch';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
@@ -19,12 +20,12 @@ export default function AdminLogin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
-        credentials: 'include',
       });
       
       const data = await res.json();
       
       if (res.ok) {
+        setAdminPassword(password);
         router.push('/admin');
         router.refresh();
       } else {

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 import { uploadImage } from '@/lib/blob';
+import { checkAdmin } from '@/lib/adminGuard';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
+  const guard = checkAdmin(req);
+  if (guard) return guard;
+  
   try {
     const form = await req.formData();
     const file = form.get('file') as File | null;

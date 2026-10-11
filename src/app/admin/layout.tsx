@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Truck, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, Truck, Settings, LogOut } from 'lucide-react';
+import { getAdminPassword, clearAdminPassword, adminFetch } from '@/lib/adminFetch';
 
 const navItems = [
   { href: '/admin', label: 'الرئيسية', icon: LayoutDashboard },
@@ -18,14 +19,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/session', { credentials: 'include' })
+    if (pathname === '/admin/login') {
+      setAuthed(false);
+      setChecking(false);
+      return;
+    }
+    
+    const pw = getAdminPassword();
+    if (!pw) {
+      setAuthed(false);
+      setChecking(false);
+      return;
+    }
+    
+    adminFetch('/api/admin/models')
       .then(r => r.json())
-      .then(d => { setAuthed(d.authenticated); setChecking(false); })
-      .catch(() => { setAuthed(false); setChecking(false); });
-  }, []);
+      .then(() => { setAuthed(true); setChecking(false); })
+      .catch(() => { 
+        clearAdminPassword();
+        setAuthed(false); 
+        setChecking(false); 
+      });
+  }, [pathname]);
 
-  const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+  const handleLogout = () => {
+    clearAdminPassword();
     window.location.href = '/admin/login';
   };
 

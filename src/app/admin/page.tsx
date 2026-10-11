@@ -1,11 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { Package, Truck, Settings, Plus, ArrowUpDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Package, Truck, Settings, Plus } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 
 export default function AdminDashboard() {
+  const [modelCount, setModelCount] = useState('—');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminFetch('/api/admin/models')
+      .then(r => r.json())
+      .then(data => setModelCount(data.filter((m: any) => m.available).length))
+      .catch(() => setModelCount('—'))
+      .finally(() => setLoading(false));
+  }, []);
+
   const stats = [
-    { label: 'الموديلات', value: '—', href: '/admin/models', icon: Package, color: 'bg-blue-100 text-blue-600' },
+    { label: 'الموديلات', value: loading ? '...' : modelCount, href: '/admin/models', icon: Package, color: 'bg-blue-100 text-blue-600' },
     { label: 'الوليات المفعّلة', value: '58', href: '/admin/shipping', icon: Truck, color: 'bg-green-100 text-green-600' },
     { label: 'باقات الأسعار', value: '3', href: '/admin/settings', icon: Settings, color: 'bg-purple-100 text-purple-600' },
   ];

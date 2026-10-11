@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, GripVertical } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface PackageOffer {
   quantity: number;
@@ -23,7 +24,7 @@ export default function AdminSettings() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('/api/admin/settings');
+      const res = await adminFetch('/api/admin/settings');
       if (res.ok) {
         const data = await res.json();
         setPackages(data.packages || []);
@@ -41,9 +42,8 @@ export default function AdminSettings() {
   const handleSave = async () => {
     setSaving(true); setError(''); setSuccess('');
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await adminFetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packages, notices }),
       });
       if (res.ok) {

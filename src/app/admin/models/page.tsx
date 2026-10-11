@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Eye, EyeOff, GripVertical, Upload, Save, X, Check } from 'lucide-react';
+import { Plus, Trash2, Upload, Save, GripVertical } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface WatchModel {
   id: string;
@@ -25,10 +26,11 @@ export default function AdminModels() {
     name: '', image: '', badge: '', colorName: '', description: '', available: true,
   });
   const [uploading, setUploading] = useState(false);
+  const [editingUpload, setEditingUpload] = useState<number | null>(null);
 
   const fetchModels = async () => {
     try {
-      const res = await fetch('/api/admin/models');
+      const res = await adminFetch('/api/admin/models');
       if (res.ok) {
         const data = await res.json();
         setModels(data.sort((a: WatchModel, b: WatchModel) => a.order - b.order));
@@ -46,9 +48,8 @@ export default function AdminModels() {
     setSaving(true);
     setError(''); setSuccess('');
     try {
-      const res = await fetch('/api/admin/models', {
+      const res = await adminFetch('/api/admin/models', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(models),
       });
       if (res.ok) {
@@ -94,7 +95,7 @@ export default function AdminModels() {
     try {
       const form = new FormData();
       form.append('file', file);
-      const res = await fetch('/api/admin/models/upload', { method: 'POST', body: form });
+      const res = await adminFetch('/api/admin/models/upload', { method: 'POST', body: form });
       const data = await res.json();
       if (res.ok && data.url) {
         if (showAdd) setNewModel({ ...newModel, image: data.url });
@@ -110,8 +111,6 @@ export default function AdminModels() {
       setUploading(false);
     }
   };
-
-  const [editingUpload, setEditingUpload] = useState<number | null>(null);
 
   const moveUp = (index: number) => {
     if (index === 0) return;

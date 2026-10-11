@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSession, getSessionCookie } from '@/lib/auth';
-import { checkRateLimit } from '@/lib/ratelimit';
+
+const PASSWORD = process.env.ADMIN_PASSWORD!;
+const attempts = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string) {
+  const now = Date.now();
+  const rec = attempts.get(ip);
+  if (!rec || now > rec.resetAt) {
+    attempts.set(ip, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    return { allowed: true };
+  }
+  if (rec.count >= 5) {
+    return { allowed: false, retryAfter: Math.ceil((rec.resetAt - now) / 1000) };
+  }
+  rec.count++;
+  return { allowed: true };
+}
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
@@ -17,18 +32,10 @@ export async function POST(req: NextRequest) {
   
   try {
     const { password } = await req.json();
-    
-    if (password !== process.env.ADMIN_PASSWORD) {
+    if (password !== PASSWORD) {
       return NextResponse.json({ error: 'كلمة المرور غير صحيحة' }, { status: 401 });
     }
-    
-    const token = await createSession();
-    console.log('[LOGIN] Token created, setting cookie');
-    const res = NextResponse.json({ ok: true });
-    const cookie = getSessionCookie(token);
-    console.log('[LOGIN] Set-Cookie:', cookie);
-    res.headers.set('Set-Cookie', cookie);
-    return res;
+    return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'طلب غير صالح' }, { status: 400 });
   }

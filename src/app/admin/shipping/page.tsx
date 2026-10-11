@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Save, Search, RefreshCw } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface FeeOverride {
   wilayaId: number;
@@ -35,7 +36,6 @@ const WILAYAS = [
 export default function AdminShipping() {
   const [overrides, setOverrides] = useState<FeeOverride[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [selectedWilaya, setSelectedWilaya] = useState<number>(1);
@@ -43,7 +43,7 @@ export default function AdminShipping() {
 
   const fetchOverrides = async () => {
     try {
-      const res = await fetch('/api/admin/shipping');
+      const res = await adminFetch('/api/admin/shipping');
       if (res.ok) {
         const data = await res.json();
         setOverrides(data);
@@ -60,43 +60,24 @@ export default function AdminShipping() {
   const getWilayaOverrides = () => overrides.filter(o => o.wilayaId === selectedWilaya && !o.communeId);
   const getCommuneOverrides = () => overrides.filter(o => o.wilayaId === selectedWilaya && o.communeId);
 
-  const handleSave = async () => {
-    setSaving(true); setError(''); setSuccess('');
-    try {
-      const res = await fetch('/api/admin/shipping', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wilayaId: selectedWilaya, home: 0, office: 0 }), // dummy to trigger save
-      });
-      // Actually we save via individual PATCH calls in handleChange
-      setSuccess('تم الحفظ تلقائياً');
-      setTimeout(() => setSuccess(''), 2000);
-    } catch {
-      setError('فشل الحفظ');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleChange = async (override: FeeOverride) => {
     const newOverrides = overrides.filter(o => 
       !(o.wilayaId === override.wilayaId && o.communeId === override.communeId)
     );
-    if (override.home !== null || override.office !== null) {
+    if (override.home !== undefined || override.office !== undefined) {
       newOverrides.push(override);
     }
     setOverrides(newOverrides);
     
     try {
-      await fetch('/api/admin/shipping', {
+      await adminFetch('/api/admin/shipping', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(override),
       });
     } catch {
       setError('فشل المزامنة مع الخادم');
       setTimeout(() => setError(''), 3000);
-      fetchOverrides(); // revert on error
+      fetchOverrides();
     }
   };
 
@@ -208,7 +189,7 @@ export default function AdminShipping() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {getCommuneOverrides().filter(o => !search || WILAYAS.find(w => w.id === selectedWilaya)?.name.includes(search)).map(override => (
+              {getCommuneOverrides().filter(o => !search || String(o.communeId).includes(search)).map(override => (
                 <tr key={`${override.wilayaId}-${override.communeId}`} className="hover:bg-slate-50">
                   <td className="p-3 text-slate-900">بلدية #{override.communeId}</td>
                   <td className="p-3">

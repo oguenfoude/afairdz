@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFeeOverrides, saveFeeOverrides } from '@/lib/data';
 import type { FeeOverride } from '@/lib/fallback';
+import { checkAdmin } from '@/lib/adminGuard';
+
+export async function GET() {
+  const overrides = await getFeeOverrides();
+  return NextResponse.json(overrides);
+}
 
 export async function PATCH(req: NextRequest) {
+  const guard = checkAdmin(req);
+  if (guard) return guard;
+  
   try {
     const body = await req.json() as Partial<FeeOverride> & { wilayaId: number; communeId?: number };
     
@@ -11,7 +20,6 @@ export async function PATCH(req: NextRequest) {
     }
     
     const overrides = await getFeeOverrides();
-    const key = `${body.wilayaId}-${body.communeId ?? 'default'}`;
     const idx = overrides.findIndex(o => 
       o.wilayaId === body.wilayaId && o.communeId === body.communeId
     );
