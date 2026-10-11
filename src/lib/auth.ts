@@ -23,7 +23,7 @@ export async function verifySession(token: string) {
 }
 
 export function getSessionCookie(token: string) {
-  return `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}`;
+  return `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${MAX_AGE}`;
 }
 
 export function clearSessionCookie() {

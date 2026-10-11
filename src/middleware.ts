@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifySession, getTokenFromCookie } from '@/lib/auth';
+import { verifySession, getTokenFromCookie, clearSessionCookie } from '@/lib/auth';
 
 const ADMIN_PATHS = ['/admin', '/api/admin'];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   
   const isAdminPath = ADMIN_PATHS.some(p => pathname.startsWith(p));
@@ -22,12 +22,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/admin/login', req.url));
   }
   
-  const isValid = verifySession(token);
+  const isValid = await verifySession(token);
   if (!isValid) {
     const res = pathname.startsWith('/api/')
       ? NextResponse.json({ error: 'Invalid session' }, { status: 401 })
       : NextResponse.redirect(new URL('/admin/login', req.url));
-    res.headers.set('Set-Cookie', getTokenFromCookie(token) ? '' : '');
+    res.headers.set('Set-Cookie', clearSessionCookie());
     return res;
   }
   

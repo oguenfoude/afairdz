@@ -18,14 +18,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/session')
+    fetch('/api/admin/session', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { setAuthed(d.authenticated); setChecking(false); })
       .catch(() => { setAuthed(false); setChecking(false); });
   }, []);
 
   const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
     window.location.href = '/admin/login';
   };
 
