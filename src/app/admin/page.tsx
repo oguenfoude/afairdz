@@ -2,8 +2,16 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Package, Truck, Settings, Plus, EyeOff } from 'lucide-react';
+import { Package, Truck, Settings, Plus, EyeOff, Ban, Undo2 } from 'lucide-react';
 import { adminFetch } from '@/lib/adminFetch';
+
+interface BlockedRow {
+  phone: string;
+  orderId: string;
+  at: number;
+  blockedAt: number;
+  reason?: string;
+}
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -11,6 +19,22 @@ export default function AdminDashboard() {
   const [blobOk, setBlobOk] = useState(true);
   const [blobReason, setBlobReason] = useState<string | null>(null);
   const [stats, setStats] = useState({ available: 0, disabled: 0, overrides: 0, packages: 0 });
+  const [blocked, setBlocked] = useState<BlockedRow[]>([]);
+
+  const loadBlocked = () => {
+    adminFetch('/api/admin/blocked')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setBlocked(d); })
+      .catch(() => {});
+  };
+
+  const handleUnblock = async (phone: string) => {
+    if (!confirm(`إلغاء حظر الرقم ${phone}؟ سيتمكن من الطلب مجدداً.`)) return;
+    try {
+      await adminFetch('/api/admin/blocked', { method: 'DELETE', body: JSON.stringify({ phone }) });
+      setBlocked(blocked.filter(b => b.phone !== phone));
+    } catch { /* adminFetch redirects on 401 */ }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -18,12 +42,14 @@ export default function AdminDashboard() {
       adminFetch('/api/admin/settings').then(r => r.json()),
       adminFetch('/api/admin/shipping').then(r => r.json()),
       adminFetch('/api/admin/health').then(r => r.json()).catch(() => ({ blob: true })),
+      adminFetch('/api/admin/blocked').then(r => r.json()).catch(() => []),
     ])
-      .then(([models, settings, shipping, health]) => {
+      .then(([models, settings, shipping, health, blockedList]) => {
         if (health && health.blob === false) {
           setBlobOk(false);
           setBlobReason(health.blobReason ?? 'unreachable');
         }
+        if (Array.isArray(blockedList)) setBlocked(blockedList);
         const list = Array.isArray(models) ? models : [];
         setStats({
           available: list.filter((m: { available: boolean }) => m.available).length,
@@ -83,6 +109,47 @@ export default function AdminDashboard() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-1 flex items-center gap-2">
+          <Ban className="h-5 w-5 text-red-600" />
+          أرقام محظورة نهائياً ({loading ? '...' : blocked.length})
+        </h2>
+        <p className="text-sm text-slate-500 mb-4">أي رقم يطلب أكثر من مرة يُحظر تلقائياً وبشكل دائم — لا طلبات ولا أي نشاط.</p>
+        {blocked.length === 0 ? (
+          <p className="text-sm text-slate-400">لا توجد أرقام محظورة حالياً.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-right text-slate-500 border-b border-slate-200">
+                  <th className="p-2 font-medium">الرقم</th>
+                  <th className="p-2 font-medium">الطلب الأصلي</th>
+                  <th className="p-2 font-medium">تاريخ الحظر</th>
+                  <th className="p-2 font-medium w-32">إجراء</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {blocked.map(b => (
+                  <tr key={b.phone} className="hover:bg-slate-50">
+                    <td className="p-2 font-bold text-slate-900" dir="ltr">{b.phone}</td>
+                    <td className="p-2 text-slate-600">{b.orderId}</td>
+                    <td className="p-2 text-slate-600">{new Date(b.blockedAt).toLocaleString('fr-FR')}</td>
+                    <td className="p-2">
+                      <button
+                        onClick={() => handleUnblock(b.phone)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-green-100 hover:text-green-700 text-xs font-bold transition-colors"
+                      >
+                        <Undo2 className="h-3.5 w-3.5" /> إلغاء الحظر
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl p-6">

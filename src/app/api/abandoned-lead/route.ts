@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAbandonedLeadNotification, AbandonedLeadData } from '@/lib/mailer';
 import { syncLeadToGoogleSheet } from '@/lib/googleSheet';
+import { getPhoneHistory, isBlocked } from '@/lib/phoneGuard';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -33,6 +34,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Blocked phones: silently drop all activity (no Sheets, no email, no trace for abusers)
+    try {
+      const rec = (await getPhoneHistory())[cleanPhone];
+      if (isBlocked(rec)) {
+        console.log(`[AntiSpam] Dropped lead from BLOCKED phone: ${cleanPhone}`);
+        return NextResponse.json({ success: true });
+      }
+    } catch { /* fall through to normal flow */ }
 
     const now = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000;

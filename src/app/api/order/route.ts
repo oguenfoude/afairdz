@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderNotification, OrderData, getAdminRecipients } from '@/lib/mailer';
 import { syncOrderToGoogleSheet, updateOrderEmailStatus } from '@/lib/googleSheet';
+import { getPhoneHistory, isBlocked, recordOrderPhone, blockPhone, BLOCKED_MESSAGE } from '@/lib/phoneGuard';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30; // Max execution duration for external APIs (Google Sheets + SMTP)
@@ -58,9 +59,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Anti-Spam: 60s double-click guard + 24h same-phone notice window.
-    // Duplicates return the ORIGINAL orderId + ORIGINAL payload (never random ids),
-    // never touch Google Sheets as a new order, never send admin email, never count for Meta.
+    // Anti-Spam: 60s double-click guard + PERMANENT block on repeat orders.
+    // - Double-click (<60s): same order, returns ORIGINAL orderId (accidental, no penalty).
+    // - Any repeat order with the same phone beyond that: PERMANENTLY BLOCKED (403),
+    //   persisted in Blob phone-history so it survives restarts/redeploys forever.
+    // - Blocked phones can never order again and their leads are silently dropped.
     const cleanPhone = body.phone.trim().replace(/[\s\-]/g, '');
     const phoneKey = `phone_${cleanPhone}`;
     const now = Date.now();
@@ -70,21 +73,47 @@ export async function POST(req: NextRequest) {
       orderCache.clear();
     }
 
+    // Persistent history first (survives restarts; memory cache is only a fast path)
+    let historyRec = undefined;
+    try {
+      historyRec = (await getPhoneHistory())[cleanPhone];
+    } catch { /* fall back to memory cache only */ }
+
+    if (historyRec && isBlocked(historyRec)) {
+      console.log(`[AntiSpam] BLOCKED phone attempt: ${cleanPhone}`);
+      return NextResponse.json({ error: BLOCKED_MESSAGE }, { status: 403 });
+    }
+
     const cached = orderCache.get(phoneKey);
     if (cached && (now - cached.timestamp) < SAME_PHONE_WINDOW_MS) {
       const isDoubleClick = (now - cached.timestamp) < DOUBLE_CLICK_MS;
-      console.log(`[AntiSpam] Duplicate order (${isDoubleClick ? 'double-click' : 'same-phone 24h'}) for Phone: ${cleanPhone}, original: ${cached.order.orderId}`);
-      // Best-effort seller callback log (local CSV + console only, never fails response)
+      if (isDoubleClick) {
+        console.log(`[AntiSpam] Double-click for Phone: ${cleanPhone}, original: ${cached.order.orderId}`);
+        try {
+          logDuplicateAttempt(cleanPhone, cached.order);
+        } catch { /* never fail */ }
+        return NextResponse.json({
+          success: true,
+          isDuplicate: true,
+          orderId: cached.order.orderId,
+          order: cached.order,
+          message: 'طلبك مسجّل مسبقاً — سنتصل بك هاتفياً لتأكيد الشحن.'
+        });
+      }
+      // Repeat order beyond double-click window => permanent block, forever.
+      console.log(`[AntiSpam] Repeat order => PERMANENT BLOCK for Phone: ${cleanPhone}, original: ${cached.order.orderId}`);
       try {
         logDuplicateAttempt(cleanPhone, cached.order);
       } catch { /* never fail */ }
-      return NextResponse.json({
-        success: true,
-        isDuplicate: true,
-        orderId: cached.order.orderId,
-        order: cached.order,
-        message: 'طلبك مسجّل مسبقاً — سنتصل بك هاتفياً لتأكيد الشحن.'
-      });
+      await blockPhone(cleanPhone, cached.order.orderId, 'repeat-order');
+      return NextResponse.json({ error: BLOCKED_MESSAGE }, { status: 403 });
+    }
+
+    // Memory cache lost (restart/redeploy) but history shows a prior order => block too.
+    if (historyRec) {
+      console.log(`[AntiSpam] Repeat order (from history) => PERMANENT BLOCK for Phone: ${cleanPhone}, original: ${historyRec.orderId}`);
+      await blockPhone(cleanPhone, historyRec.orderId, 'repeat-order');
+      return NextResponse.json({ error: BLOCKED_MESSAGE }, { status: 403 });
     }
 
     const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
@@ -155,6 +184,8 @@ export async function POST(req: NextRequest) {
 
     // Refresh the successful order in the AntiSpam cache with final payload
     orderCache.set(phoneKey, { timestamp: now, order: orderData });
+    // Persist phone so repeat orders are blocked forever (survives restarts)
+    await recordOrderPhone(cleanPhone, orderId);
 
     return NextResponse.json({
       success: true,
