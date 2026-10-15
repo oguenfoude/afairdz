@@ -20,7 +20,7 @@ export interface PackageOffer {
 }
 
 export const FALLBACK_MODELS: WatchModel[] = [
-  { id: 'm1', name: 'الموديل 1', image: '/images/products/photo_2026-10-11_20-07-01.webp', available: true, order: 1 },
+  { id: 'm1', name: 'الموديل 1', image: '/images/products/photo_2026-10-11_18-41-18.webp', available: true, order: 1 },
   { id: 'm2', name: 'الموديل 2', image: '/images/products/photo_2026-10-08_20-59-48.webp', available: true, order: 2 },
   { id: 'm3', name: 'الموديل 3', image: '/images/products/24.webp', available: true, order: 3 },
   { id: 'm4', name: 'الموديل 4', image: '/images/products/photo_2026-10-11_20-06-58.webp', available: true, order: 4 },
