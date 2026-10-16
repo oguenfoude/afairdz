@@ -133,7 +133,7 @@ export function getAdminRecipients(): string[] {
 export function getSenderEmail(): string {
   if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
   const user = process.env.SMTP_USER || process.env.GOOGLE_EMAIL;
-  if (user) return `"Affaire DZ" <${user}>`;
+  if (user) return `"Hama store" <${user}>`;
   throw new Error(
     'Missing sender email: set EMAIL_FROM or SMTP_USER. ' +
     'بريد المرسل مفقود: يرجى ضبط EMAIL_FROM أو SMTP_USER في متغيرات البيئة.'
@@ -225,7 +225,7 @@ export async function sendOrderNotification(order: OrderData) {
     <body>
       <div class="container">
         <div class="header">
-          <h2 style="color:white; margin:0; margin-bottom: 10px; font-size: 28px;">Affaire DZ</h2>
+          <h2 style="color:white; margin:0; margin-bottom: 10px; font-size: 28px;">Hama store</h2>
           <h1>طلب شراء جديد مؤكد ✅</h1>
           <div class="badge">رقم الطلب: ${order.orderId}</div>
         </div>
@@ -289,7 +289,7 @@ export async function sendOrderNotification(order: OrderData) {
         </div>
         
         <div class="footer">
-          تم إرسال هذا البريد تلقائياً من نظام متجر Affaire DZ<br>
+          تم إرسال هذا البريد تلقائياً من نظام متجر Hama store<br>
           © ${new Date().getFullYear()} جميع الحقوق محفوظة
         </div>
       </div>
@@ -301,7 +301,7 @@ export async function sendOrderNotification(order: OrderData) {
   const mailOptions = {
     from: getSenderEmail(),
     to: getAdminRecipients(),
-    subject: `✅ [Affaire DZ] طلب جديد: ${order.fullName} - ${order.wilayaName} (${order.totalPrice} دج)`,
+    subject: `✅ [Hama store] طلب جديد: ${order.fullName} - ${order.wilayaName} (${order.totalPrice} دج)`,
     html,
     attachments
   };
@@ -386,7 +386,7 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
     <body>
       <div class="container">
         <div class="header">
-          <h2 style="color:white; margin:0; margin-bottom: 8px; font-size: 24px;">Affaire DZ</h2>
+          <h2 style="color:white; margin:0; margin-bottom: 8px; font-size: 24px;">Hama store</h2>
           <h1>⚠️ تنبيه سلة متروكة (زبون لم يكمل الطلب)</h1>
           <div class="badge">المعرف: ${lead.leadId}</div>
         </div>
@@ -441,7 +441,7 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
         </div>
         
         <div class="footer">
-          إشعار آلي داخلي خاص بإدارة متجر Affaire DZ • غير مرتبط بإعلانات ميتا نهائياً
+          إشعار آلي داخلي خاص بإدارة متجر Hama store • غير مرتبط بإعلانات ميتا نهائياً
         </div>
       </div>
     </body>

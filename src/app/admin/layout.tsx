@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row" dir="rtl">
       <aside className="w-full md:w-64 shrink-0 bg-white border-b md:border-b-0 md:border-l border-slate-200 md:min-h-screen flex md:flex-col">
         <div className="px-4 py-4 md:p-6 md:border-b border-slate-200">
-          <h1 className="text-lg md:text-xl font-bold text-[#222355]">إدارة Affaire DZ</h1>
+          <h1 className="text-lg md:text-xl font-bold text-[#222355]">إدارة Hama store</h1>
         </div>
 
         <nav className="flex-1 flex md:block gap-1 overflow-x-auto px-3 pb-3 md:p-4 md:space-y-1">

@@ -20,8 +20,8 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://affaire-dz.com"),
   title: "تخفيض من 300اف الى 150 الف لمدة 3ايام",
-  description: "عرض حصري من Affaire DZ: ساعة كوارتز فاخرة + خاتم ستانلس + براسلي أنيق داخل علبة إهداء بـ 1500 دج فقط. توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام.",
-  keywords: "Affaire DZ, ساعات رجالية الجزائر, طقم ساعة وخاتم وبراسلي, ساعة 1500 دج, توصيل 58 ولاية, الدفع عند الاستلام",
+  description: "عرض حصري من Hama store: ساعة كوارتز فاخرة + خاتم ستانلس + براسلي أنيق داخل علبة إهداء بـ 1500 دج فقط. توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام.",
+  keywords: "Hama store, ساعات رجالية الجزائر, طقم ساعة وخاتم وبراسلي, ساعة 1500 دج, توصيل 58 ولاية, الدفع عند الاستلام",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
@@ -29,20 +29,20 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "تخفيض من 300اف الى 150 الف لمدة 3ايام",
-    description: "عرض حصري من Affaire DZ: ساعة كوارتز أصلية + خاتم ستانلس + براسلي أنيق داخل علبة إهداء. توصيل 58 ولاية والدفع عند الاستلام بعد المعاينة.",
-    siteName: "Affaire DZ",
+    description: "عرض حصري من Hama store: ساعة كوارتز أصلية + خاتم ستانلس + براسلي أنيق داخل علبة إهداء. توصيل 58 ولاية والدفع عند الاستلام بعد المعاينة.",
+    siteName: "Hama store",
     images: [
       {
         url: "/logo.png",
         width: 1024,
         height: 558,
-        alt: "Affaire DZ Logo"
+        alt: "Hama store Logo"
       },
       {
         url: "/images/products/24.webp",
         width: 800,
         height: 800,
-        alt: "طقم ساعة يد رجالية - Affaire DZ"
+        alt: "طقم ساعة يد رجالية - Hama store"
       }
     ],
     locale: "ar_DZ",

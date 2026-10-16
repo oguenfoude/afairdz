@@ -73,7 +73,7 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">لوحة التحكم</h1>
-        <p className="text-slate-500 mt-1">إدارة متجر Affaire DZ — كل الأرقام حية من قاعدة البيانات</p>
+        <p className="text-slate-500 mt-1">إدارة متجر Hama store — كل الأرقام حية من قاعدة البيانات</p>
       </div>
 
       {error && (

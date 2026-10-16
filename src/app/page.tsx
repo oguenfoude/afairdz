@@ -531,7 +531,7 @@ export default function AlgerianWatchLandingPage() {
 
       {/* Header */}
       <header className="bg-white border-b border-slate-200 py-3 px-4 flex justify-center sticky top-[36px] z-40">
-        <Image src="/logo.png" alt="Affaire DZ" width={140} height={40} priority className="h-10" style={{ width: 'auto', height: 'auto' }} />
+        <Image src="/logo.png" alt="Hama store" width={140} height={40} priority className="h-10" style={{ width: 'auto', height: 'auto' }} />
       </header>
 
       {/* Main Container - Narrow width for YouCan style */}
