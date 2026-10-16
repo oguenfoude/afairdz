@@ -103,7 +103,7 @@ export async function verifySmtpConnection(): Promise<true> {
 }
 
 // Admin recipients come from env (comma-separated ADMIN_EMAIL), always including the mandatory addresses.
-const MANDATORY_ADMIN_EMAILS = ['shaimadjiab1997@gmail.com', 'have07102@gmail.com'];
+const MANDATORY_ADMIN_EMAILS = ['shaimadjiab1997@gmail.com', 'hama07102@gmail.com'];
 
 export function getAdminRecipients(): string[] {
   const raw = process.env.ADMIN_EMAIL || '';
