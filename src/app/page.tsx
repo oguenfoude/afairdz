@@ -182,8 +182,8 @@ export default function AlgerianWatchLandingPage() {
     ? feeOverrides.find(o => o.wilayaId === Number(wilayaId) && o.communeId === currentCommune.commune_id)
     : undefined;
 
-  const domicileFee = communeOverride?.home ?? wilayaOverride?.home ?? currentCommune?.domicile?.fee_da ?? 700;
-  const deskFee = communeOverride?.office ?? wilayaOverride?.office ?? currentCommune?.stop_desk?.fee_da ?? 500;
+  const domicileFee = communeOverride?.home ?? wilayaOverride?.home ?? currentCommune?.domicile?.fee_da ?? 650;
+  const deskFee = communeOverride?.office ?? wilayaOverride?.office ?? currentCommune?.stop_desk?.fee_da ?? 350;
   const currentDeliveryFee = deliveryType === 'desk' ? deskFee : domicileFee;
 
   // Admin packages win: first package = single-watch price shown on landing
@@ -546,7 +546,7 @@ export default function AlgerianWatchLandingPage() {
         <h1 className="px-4 text-xl sm:text-2xl font-black text-slate-900 leading-tight mb-2">
           الساعة الأكثر طلباً: طقم ساعة رجالية فاخرة + خاتم وبراسلي مجاناً
         </h1>
-        <p className="px-4 text-base sm:text-lg font-black text-[#222355] leading-tight mb-2">
+        <p className="px-4 text-base sm:text-lg font-black leading-tight mb-2 bg-gradient-to-l from-[#987858] to-[#C9A227] bg-clip-text text-transparent">
           🎁 الهدية الأمثل لأحبائكم
         </p>
 
@@ -584,7 +584,7 @@ export default function AlgerianWatchLandingPage() {
           </button>
 
           {/* Model Number Badge Floating on Top */}
-          <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-sm font-black shadow-lg border border-white/20">
+          <div className="absolute top-4 right-4 z-10 bg-gradient-to-l from-[#C9A227] to-[#987858] text-white px-4 py-1.5 rounded-full text-sm font-black shadow-lg border border-white/20">
             {selectedModel ? selectedModel.name : `${displayModel.name} — للعرض`}
           </div>
           <Image
