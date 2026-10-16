@@ -32,7 +32,7 @@ interface WatchModel {
 }
 
 interface OrderSuccessModel {
-  modelId: number;
+  modelId: string | number;
   modelName: string;
   image: string;
 }
@@ -324,7 +324,7 @@ export default function AlgerianWatchLandingPage() {
         deliveryFee: currentDeliveryFee,
         totalPrice,
         selectedModels: [{
-          modelId: Number(model.id),
+          modelId: model.id,
           modelName: model.name,
           image: model.image
         }]
@@ -679,7 +679,7 @@ export default function AlgerianWatchLandingPage() {
                   id="modelSelectForm"
                   value={selectedModel?.id ?? ''}
                   onChange={(e) => {
-                    const model = availableModels.find(m => m.id === Number(e.target.value));
+                    const model = availableModels.find(m => String(m.id) === e.target.value);
                     setSelectedModel(model ?? null);
                   }}
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"

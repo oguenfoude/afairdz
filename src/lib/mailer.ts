@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 interface OrderItem {
-  modelId: number;
+  modelId: string | number;
   modelName: string;
   image: string;
 }
