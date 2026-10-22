@@ -33,9 +33,9 @@ export const FALLBACK_MODELS: WatchModel[] = [
 ];
 
 export const FALLBACK_PACKAGES: PackageOffer[] = [
-  { quantity: 1, title: '1 ساعة', pricePerUnit: 1500, totalPrice: 1500, originalTotal: 3000, savings: 1500, bonus: '1500 دج' },
-  { quantity: 2, title: '2 ساعات', pricePerUnit: 1400, totalPrice: 2800, originalTotal: 6000, savings: 3200, bonus: '2800 دج (توفير 200 دج)' },
-  { quantity: 3, title: '3 ساعات', pricePerUnit: 1300, totalPrice: 3900, originalTotal: 9000, savings: 5100, bonus: '3900 دج (توفير 600 دج)' },
+  { quantity: 1, title: '1 ساعة', pricePerUnit: 1600, totalPrice: 1600, originalTotal: 3200, savings: 1600, bonus: '1600 دج' },
+  { quantity: 2, title: '2 ساعات', pricePerUnit: 1500, totalPrice: 3000, originalTotal: 6400, savings: 3400, bonus: '3000 دج (توفير 200 دج)' },
+  { quantity: 3, title: '3 ساعات', pricePerUnit: 1400, totalPrice: 4200, originalTotal: 9600, savings: 5400, bonus: '4200 دج (توفير 600 دج)' },
 ];
 
 export interface FeeOverride {

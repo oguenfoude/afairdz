@@ -141,7 +141,7 @@ export function getSenderEmail(): string {
 }
 
 export async function sendOrderNotification(order: OrderData) {
-  const deliveryTypeLabel = order.deliveryType === 'desk' ? 'استلام من المكتب (500 دج)' : 'توصيل لباب المنزل (700 دج)';
+  const deliveryTypeLabel = order.deliveryType === 'desk' ? `استلام من المكتب (${order.deliveryFee} دج)` : `توصيل لباب المنزل (${order.deliveryFee} دج)`;
   const attachments: Array<{ filename: string; path: string; cid?: string }> = [];
 
   // 1. Attach Brand Logo if exists
@@ -428,7 +428,7 @@ export async function sendAbandonedLeadNotification(lead: AbandonedLeadData) {
             </tr>
             <tr>
               <th>المبلغ التقديري</th>
-              <td style="color: #1e1b4b;">${lead.estimatedTotal || 2200} دج</td>
+              <td style="color: #1e1b4b;">${lead.estimatedTotal || 2250} دج</td>
             </tr>
           </table>
 

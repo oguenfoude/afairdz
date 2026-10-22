@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       deliveryType: body.deliveryType === 'desk' ? 'desk' : 'domicile',
       addressDetails,
       selectedModels: body.selectedModels || [],
-      estimatedTotal: Number(body.estimatedTotal) || 2200,
+      estimatedTotal: Number(body.estimatedTotal) || 2250,
       abandonedAt,
       stage: body.stage || 'page_leave'
     };

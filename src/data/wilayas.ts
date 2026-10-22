@@ -161,14 +161,14 @@ export function isDomicileAvailableForCommune(wilayaId: number, communeName: str
 
 export function getStopDeskFeeForWilaya(wilayaId: number): number {
   const wilaya = getWilayaById(wilayaId);
-  if (!wilaya) return 450;
+  if (!wilaya) return 400;
   const deskCommune = wilaya.communes.find(c => c.stop_desk && c.stop_desk.available && c.stop_desk.fee_da);
-  return deskCommune?.stop_desk?.fee_da ?? 450;
+  return deskCommune?.stop_desk?.fee_da ?? 400;
 }
 
 export function getDomicileFeeForCommune(wilayaId: number, communeName?: string): number {
   const wilaya = getWilayaById(wilayaId);
-  if (!wilaya) return 750;
+  if (!wilaya) return 700;
   if (communeName) {
     const commune = getCommuneByName(wilayaId, communeName);
     if (commune && commune.domicile && commune.domicile.available && commune.domicile.fee_da) {
@@ -176,7 +176,7 @@ export function getDomicileFeeForCommune(wilayaId: number, communeName?: string)
     }
   }
   const domCommune = wilaya.communes.find(c => c.domicile && c.domicile.available && c.domicile.fee_da);
-  return domCommune?.domicile?.fee_da ?? 750;
+  return domCommune?.domicile?.fee_da ?? 700;
 }
 
 export function getDeliveryFee(

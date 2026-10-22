@@ -182,13 +182,13 @@ export default function AlgerianWatchLandingPage() {
     ? feeOverrides.find(o => o.wilayaId === Number(wilayaId) && o.communeId === currentCommune.commune_id)
     : undefined;
 
-  const domicileFee = communeOverride?.home ?? wilayaOverride?.home ?? currentCommune?.domicile?.fee_da ?? 700;
-  const deskFee = communeOverride?.office ?? wilayaOverride?.office ?? currentCommune?.stop_desk?.fee_da ?? 500;
+  const domicileFee = communeOverride?.home ?? wilayaOverride?.home ?? currentCommune?.domicile?.fee_da ?? 650;
+  const deskFee = communeOverride?.office ?? wilayaOverride?.office ?? currentCommune?.stop_desk?.fee_da ?? 450;
   const currentDeliveryFee = deliveryType === 'desk' ? deskFee : domicileFee;
 
   // Admin packages win: first package = single-watch price shown on landing
-  const productPrice = packages[0]?.totalPrice ?? 1500;
-  const originalPrice = packages[0]?.originalTotal ?? 3000;
+  const productPrice = packages[0]?.totalPrice ?? 1600;
+  const originalPrice = packages[0]?.originalTotal ?? 3200;
   const totalPrice = productPrice + currentDeliveryFee;
 
   const hasLocation = Boolean(wilayaId && communeName);
