@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Repo-specific: gitignored dev scripts + one-off migration + CSV data dir
+    "scratch/**",
+    "update_fees.js",
+    "data/**",
   ]),
 ]);
 
