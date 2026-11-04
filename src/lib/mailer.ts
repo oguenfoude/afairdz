@@ -133,7 +133,7 @@ export function getAdminRecipients(): string[] {
 export function getSenderEmail(): string {
   if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
   const user = process.env.SMTP_USER || process.env.GOOGLE_EMAIL;
-  if (user) return `"Affaire DZ" <${user}>`;
+  if (user) return `"BS Montres" <${user}>`;
   throw new Error(
     'Missing sender email: set EMAIL_FROM or SMTP_USER. ' +
     'بريد المرسل مفقود: يرجى ضبط EMAIL_FROM أو SMTP_USER في متغيرات البيئة.'

@@ -35,7 +35,9 @@ export const FALLBACK_MODELS: WatchModel[] = [
 export const PRODUCT_GALLERY_IMAGES = [
   { id: 1, src: '/images/products/set-blue-01.jpg', label: 'صورة كاملة للطقم' },
   { id: 2, src: '/images/products/set-blue-02.jpg', label: 'زاوية جانبية مقربة' },
-  { id: 3, src: '/images/products/set-blue-03.jpg', label: 'داخل علبة الإهداء' },
+  { id: 3, src: '/images/products/set-blue-03.jpg', label: 'لقطة نهارية واقعية' },
+  { id: 4, src: '/images/products/set-blue-04.jpg', label: 'تفاصيل المينا' },
+  { id: 5, src: '/images/products/set-blue-05.jpg', label: 'صينية العرض الفاخرة' },
 ];
 
 export const FALLBACK_PACKAGES: PackageOffer[] = [
@@ -54,5 +56,5 @@ export interface FeeOverride {
 export const FALLBACK_FEES: FeeOverride[] = [];
 
 export const FALLBACK_SETTINGS = {
-  notices: 'تخفيض حصري: 2900 دج فقط لفترة محدودة — توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام',
+  notices: 'BS Montres — تخفيض حصري: 2900 دج فقط لفترة محدودة — توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام',
 };

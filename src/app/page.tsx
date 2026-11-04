@@ -71,8 +71,10 @@ const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
 
 const PRODUCT_GALLERY = [
   { id: 1, image: '/images/products/set-blue-01.jpg', label: 'طقم الساعة الملكية' },
-  { id: 2, image: '/images/products/set-blue-02.jpg', label: 'زاوية مقربة' },
-  { id: 3, image: '/images/products/set-blue-03.jpg', label: 'داخل علبة الإهداء' },
+  { id: 2, image: '/images/products/set-blue-02.jpg', label: 'زاوية 35° مقربة' },
+  { id: 3, image: '/images/products/set-blue-03.jpg', label: 'لقطة نهارية واقعية' },
+  { id: 4, image: '/images/products/set-blue-04.jpg', label: 'تفاصيل المينا' },
+  { id: 5, image: '/images/products/set-blue-05.jpg', label: 'صينية العرض الفاخرة' },
 ];
 
 export default function AlgerianWatchLandingPage() {
@@ -427,7 +429,7 @@ export default function AlgerianWatchLandingPage() {
                   <Image src={orderSuccess.selectedModels[0]?.image || '/logo.png'} alt="Product" fill sizes="64px" className="object-contain p-1" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm text-[#222355] mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
+                  <p className="font-bold text-sm text-emerald-900 mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
                   <p className="text-xs font-bold text-slate-500">الكمية: 1 • الدفع عند الاستلام</p>
                 </div>
               </div>
@@ -440,7 +442,7 @@ export default function AlgerianWatchLandingPage() {
                 </p>
                 <p className="flex justify-between border-b border-slate-100 pb-1.5">
                   <span className="text-slate-500">الهاتف:</span>
-                  <strong className="text-[#222355] font-black" dir="ltr">{orderSuccess.phone}</strong>
+                  <strong className="text-emerald-900 font-black" dir="ltr">{orderSuccess.phone}</strong>
                 </p>
                 <p className="flex justify-between border-b border-slate-100 pb-1.5">
                   <span className="text-slate-500">العنوان:</span>
@@ -448,7 +450,7 @@ export default function AlgerianWatchLandingPage() {
                 </p>
                 <p className="flex justify-between pt-1">
                   <span className="font-bold text-slate-800">المبلغ الإجمالي:</span>
-                  <span className="font-black text-[#DC2626] text-lg">{orderSuccess.totalPrice} دج</span>
+                  <span className="font-black text-emerald-800 text-lg">{orderSuccess.totalPrice} دج</span>
                 </p>
               </div>
             </div>
@@ -457,7 +459,7 @@ export default function AlgerianWatchLandingPage() {
               سنتصل بك هاتفياً قريباً جداً على رقم هاتفك لتأكيد الطلب وشحنه إليك.
             </div>
 
-            <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#222355] hover:bg-[#1a1b40] text-white rounded-xl font-bold shadow-md transition-all active:scale-95">
+            <button onClick={() => window.location.reload()} className="w-full py-4 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold shadow-md transition-all active:scale-95">
               العودة للرئيسية
             </button>
           </div>
@@ -467,7 +469,7 @@ export default function AlgerianWatchLandingPage() {
 
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12" dir="rtl">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 sm:p-8 text-center border-t-8 border-[#222355]">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 sm:p-8 text-center border-t-8 border-emerald-800">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
@@ -480,10 +482,10 @@ export default function AlgerianWatchLandingPage() {
             {/* Product Details */}
             <div className="flex gap-4 items-center bg-white p-3 rounded-xl border border-slate-100 mb-4 shadow-sm">
               <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
-                <Image src={orderSuccess.selectedModels[0]?.image || '/logo.png'} alt="Product" fill sizes="64px" className="object-contain p-1" />
+                <Image src={orderSuccess.selectedModels[0]?.image || '/images/products/set-blue-01.jpg'} alt="Product" fill sizes="64px" className="object-contain p-1" />
               </div>
               <div>
-                <p className="font-bold text-sm text-[#222355] mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
+                <p className="font-bold text-sm text-emerald-900 mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
                 <p className="text-xs font-bold text-slate-500">الكمية: 1 • الدفع عند الاستلام</p>
               </div>
             </div>
@@ -496,7 +498,7 @@ export default function AlgerianWatchLandingPage() {
               </p>
               <p className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="text-slate-500">الهاتف:</span> 
-                <strong className="text-[#222355] font-black" dir="ltr">{orderSuccess.phone}</strong>
+                <strong className="text-emerald-900 font-black" dir="ltr">{orderSuccess.phone}</strong>
               </p>
               <p className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="text-slate-500">العنوان:</span> 
@@ -504,7 +506,7 @@ export default function AlgerianWatchLandingPage() {
               </p>
               <p className="flex justify-between pt-1">
                 <span className="font-bold text-slate-800">المبلغ الإجمالي:</span> 
-                <span className="font-black text-[#DC2626] text-lg">{orderSuccess.totalPrice} دج</span>
+                <span className="font-black text-emerald-800 text-lg">{orderSuccess.totalPrice} دج</span>
               </p>
             </div>
           </div>
@@ -513,7 +515,7 @@ export default function AlgerianWatchLandingPage() {
             شكرًا لثقتك بنا! 🎉<br/>سيتصل بك فريقنا قريباً جداً على رقم هاتفك لتأكيد الطلب وشحنه إليك.
           </div>
 
-          <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#222355] hover:bg-[#1a1b40] text-white rounded-xl font-bold shadow-md transition-all active:scale-95">
+          <button onClick={() => window.location.reload()} className="w-full py-4 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold shadow-md transition-all active:scale-95">
             العودة للرئيسية
           </button>
         </div>
@@ -523,14 +525,21 @@ export default function AlgerianWatchLandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 lg:pb-0" dir="rtl">
-      {/* Notice Bar — admin notices win, default fallback */}
-      <aside className="bg-[#DC2626] text-white text-sm font-bold py-2 px-4 text-center sticky top-0 z-50">
-        {notices.trim() ? notices.trim() : 'توصيل 58 ولاية و الدفع عند الاستلام'}
+      {/* Notice Bar */}
+      <aside className="bg-emerald-900 text-white text-sm font-bold py-2.5 px-4 text-center sticky top-0 z-50 tracking-wide">
+        {notices.trim() ? notices.trim() : 'BS Montres — توصيل سريع لـ 58 ولاية والدفع بعد المعاينة عند الاستلام'}
       </aside>
 
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 py-3 px-4 flex justify-center sticky top-[36px] z-40">
-        <Image src="/logo.png" alt="Affaire DZ" width={140} height={40} priority className="h-10" style={{ width: 'auto', height: 'auto' }} />
+      {/* Header - BS MONTRES typography, no old logo */}
+      <header className="bg-white border-b border-slate-200 py-3.5 px-4 flex justify-center items-center sticky top-[41px] z-40 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="text-2xl sm:text-3xl font-black tracking-widest text-slate-900 font-serif">
+            BS <span className="text-emerald-700">MONTRES</span>
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+            OFFICIEL
+          </span>
+        </div>
       </header>
 
       {/* Main Container - Narrow width for YouCan style */}
@@ -538,20 +547,20 @@ export default function AlgerianWatchLandingPage() {
         
         {/* Breadcrumb / Category */}
         <div className="px-4 pt-4 pb-2 text-xs text-slate-500 flex items-center gap-1">
-          <span>الرئيسية</span> <span>/</span> <span className="text-[#222355] font-bold">ساعات رجالية</span>
+          <span>الرئيسية</span> <span>/</span> <span className="text-emerald-800 font-bold">ساعات رجالية فاخرة</span>
         </div>
 
         {/* Product Title */}
         <h1 className="px-4 text-xl sm:text-2xl font-black text-slate-900 leading-tight mb-2">
           طقم الساعة الملكية الفاخرة: ساعة بمينا أزرق ملكي + سوار التاج + خاتم مجاناً
         </h1>
-        <p className="px-4 text-base sm:text-lg font-black text-[#222355] leading-tight mb-2">
-          🎁 طقم متكامل داخل علبة إهداء فاخرة — التخفيض الأقوى في الجزائر
+        <p className="px-4 text-base sm:text-lg font-black text-emerald-900 leading-tight mb-2">
+          🎁 طقم متكامل داخل علبة إهداء فاخرة — عرض حصري من BS Montres
         </p>
 
         {/* Reviews snippet */}
         <div className="px-4 flex items-center gap-1 mb-4">
-          <div className="flex text-[#222355]">
+          <div className="flex text-amber-500">
             <Star className="w-4 h-4 fill-current" />
             <Star className="w-4 h-4 fill-current" />
             <Star className="w-4 h-4 fill-current" />
@@ -565,8 +574,8 @@ export default function AlgerianWatchLandingPage() {
         <div className="px-4 flex items-end gap-3 mb-4">
           <div className="text-3xl font-black text-[#DC2626]">{productPrice} دج</div>
           <div className="text-base text-slate-400 line-through font-bold pb-1">{originalPrice} دج</div>
-          <span className="bg-red-100 text-red-700 text-xs font-black px-2.5 py-1 rounded-full pb-1">
-            خصم 50%
+          <span className="bg-emerald-100 text-emerald-800 text-xs font-black px-2.5 py-1 rounded-full pb-1 border border-emerald-200">
+            خصم 50% لفترة محدودة
           </span>
         </div>
 
@@ -578,22 +587,22 @@ export default function AlgerianWatchLandingPage() {
           onTouchEnd={onTouchEndEvent}
         >
           {/* Navigation Arrows */}
-          <button onClick={handlePrevImage} type="button" aria-label="الصورة السابقة" className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all">
+          <button onClick={handlePrevImage} type="button" aria-label="الصورة السابقة" className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white p-2.5 rounded-full shadow-md text-emerald-900 transition-all">
             <ChevronRight className="w-6 h-6" />
           </button>
-          <button onClick={handleNextImage} type="button" aria-label="الصورة التالية" className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all">
+          <button onClick={handleNextImage} type="button" aria-label="الصورة التالية" className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white p-2.5 rounded-full shadow-md text-emerald-900 transition-all">
             <ChevronLeft className="w-6 h-6" />
           </button>
 
           {/* Model Number Badge Floating on Top */}
-          <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-black shadow-lg border border-white/20">
-            {PRODUCT_GALLERY[galleryIndex]?.label || 'طقم الساعة الملكية'}
+          <div className="absolute top-4 right-4 z-10 bg-emerald-900 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-black shadow-lg border border-white/20">
+            {PRODUCT_GALLERY[galleryIndex]?.label || 'BS Montres'}
           </div>
 
           <Image
             key={currentDisplayImage}
             src={currentDisplayImage}
-            alt="طقم الساعة الملكية الفاخرة"
+            alt="طقم الساعة الملكية الفاخرة - BS Montres"
             fill
             sizes="(max-width: 768px) 100vw, 800px"
             priority
@@ -603,7 +612,7 @@ export default function AlgerianWatchLandingPage() {
           />
 
           <div className="absolute bottom-4 inset-x-0 z-10 flex justify-center pointer-events-none">
-            <span className="bg-white/90 backdrop-blur-sm text-[#222355] px-3.5 py-1 rounded-full text-xs font-bold shadow-sm">
+            <span className="bg-white/90 backdrop-blur-sm text-emerald-950 px-3.5 py-1 rounded-full text-xs font-bold shadow-sm">
               اسحب للتنقل بين الزوايا ({galleryIndex + 1} من {PRODUCT_GALLERY.length})
             </span>
           </div>
@@ -611,24 +620,24 @@ export default function AlgerianWatchLandingPage() {
 
         {/* Image Gallery Thumbnails */}
         <div className="px-4 py-4 border-b border-slate-100 bg-white">
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x justify-start sm:justify-center">
             {PRODUCT_GALLERY.map((item, idx) => (
               <button
                 key={item.id}
                 onClick={() => setGalleryIndex(idx)}
                 type="button"
-                className={`relative w-20 h-20 rounded-2xl overflow-hidden border-2 bg-slate-50 transition-all ${
-                  galleryIndex === idx ? 'border-[#222355] ring-2 ring-[#222355]/30 scale-105' : 'border-slate-200 opacity-70 hover:opacity-100'
+                className={`relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl overflow-hidden border-2 snap-start bg-slate-50 transition-all ${
+                  galleryIndex === idx ? 'border-emerald-800 ring-2 ring-emerald-800/30 scale-105' : 'border-slate-200 opacity-70 hover:opacity-100'
                 }`}
               >
                 <Image src={item.image} alt={item.label} fill sizes="80px" loading="lazy" decoding="async" className="object-cover p-1" />
-                <span className="absolute bottom-0 inset-x-0 bg-[#222355]/90 text-white text-[9px] font-bold py-0.5 text-center leading-tight">
+                <span className="absolute bottom-0 inset-x-0 bg-emerald-950/90 text-white text-[8px] sm:text-[9px] font-bold py-0.5 text-center leading-tight">
                   {item.label}
                 </span>
               </button>
             ))}
           </div>
-          <p className="pt-3 text-center text-xs font-bold text-slate-500">
+          <p className="pt-2 text-center text-xs font-bold text-slate-500">
             📸 صور حقيقية ومطابقة 100% للمنتج الذي ستستلمه
           </p>
         </div>
@@ -637,23 +646,23 @@ export default function AlgerianWatchLandingPage() {
         <div className="px-4 py-6 border-b border-slate-100">
           <ul className="space-y-3">
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Check className="w-4 h-4" /></span>
+              <span className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0"><Check className="w-4 h-4" /></span>
               ساعة كوارتز رجالية فاخرة بمينا أزرق ملكي وإطار مسنن من الستانلس ستيل
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Check className="w-4 h-4" /></span>
+              <span className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0"><Check className="w-4 h-4" /></span>
               سوار التاج الملكي بلون فضي ولوحة زرقاء متناسقة
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Check className="w-4 h-4" /></span>
+              <span className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0"><Check className="w-4 h-4" /></span>
               خاتم ستانلس ستيل أصلي بتصميم مخطط أنيق وعصري
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Gift className="w-4 h-4" /></span>
+              <span className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0"><Gift className="w-4 h-4" /></span>
               تأتي جميع القطع كاملة داخل علبة إهداء سوداء فاخرة
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 shrink-0"><CheckCircle2 className="w-4 h-4" /></span>
+              <span className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0"><CheckCircle2 className="w-4 h-4" /></span>
               الدفع عند الاستلام بعد فتح الطرد ومعاينته بيدك
             </li>
           </ul>
@@ -675,13 +684,13 @@ export default function AlgerianWatchLandingPage() {
                   <Image src="/images/products/set-blue-01.jpg" alt="طقم الساعة الملكية" fill sizes="64px" className="object-cover" />
                 </div>
                 <div>
-                  <span className="inline-block bg-green-100 text-green-800 text-[10px] font-black px-2 py-0.5 rounded-full mb-1">
+                  <span className="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full mb-1">
                     ✓ مشمول في العرض المخفض
                   </span>
                   <h3 className="text-sm font-black text-slate-900 leading-snug">
                     طقم الساعة الملكية (ساعة + سوار التاج + خاتم + علبة)
                   </h3>
-                  <p className="text-xs text-slate-500 font-bold">اللون: أزرق ملكي وفضي</p>
+                  <p className="text-xs text-slate-500 font-bold">BS Montres • أزرق ملكي وفضي</p>
                 </div>
               </div>
               <div className="text-left shrink-0">
@@ -697,7 +706,7 @@ export default function AlgerianWatchLandingPage() {
                 required
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-800 focus:border-transparent outline-none"
                 placeholder="الاسم واللقب"
               />
             </div>
@@ -711,7 +720,7 @@ export default function AlgerianWatchLandingPage() {
                 maxLength={10}
                 value={phone}
                 onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none text-right"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-800 focus:border-transparent outline-none text-right"
                 placeholder="05 / 06 / 07 XX XX XX XX"
               />
             </div>
@@ -722,7 +731,7 @@ export default function AlgerianWatchLandingPage() {
                 required
                 value={wilayaId}
                 onChange={e => { setWilayaId(Number(e.target.value) || ''); setCommuneName(''); }}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-800 focus:border-transparent outline-none"
               >
                 <option value="">-- اختر الولاية --</option>
                 {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{getWilayaDisplayName(w)}</option>)}
@@ -747,7 +756,7 @@ export default function AlgerianWatchLandingPage() {
                       }
                     }
                   }}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-800 focus:border-transparent outline-none"
                 >
                   <option value="">-- اختر البلدية --</option>
                   {communesList.map(c => (
@@ -764,10 +773,10 @@ export default function AlgerianWatchLandingPage() {
                 <div>
                   <label className="block text-sm font-bold text-slate-900 mb-2">طريقة التوصيل <span className="text-[#DC2626]">*</span></label>
                   <div className="space-y-2">
-                    <button type="button" onClick={() => currentCommune.domicile.available && setDeliveryType('domicile')} disabled={!currentCommune.domicile.available} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${!currentCommune.domicile.available ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer'} ${deliveryType === 'domicile' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
+                    <button type="button" onClick={() => currentCommune.domicile.available && setDeliveryType('domicile')} disabled={!currentCommune.domicile.available} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${!currentCommune.domicile.available ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer'} ${deliveryType === 'domicile' ? 'border-emerald-800 bg-emerald-50/70' : 'border-slate-200'}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'domicile' ? 'border-[#222355]' : 'border-slate-300'}`}>
-                          {deliveryType === 'domicile' && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'domicile' ? 'border-emerald-800' : 'border-slate-300'}`}>
+                          {deliveryType === 'domicile' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-800" />}
                         </div>
                         <span className={`font-bold text-sm ${currentCommune.domicile.available ? 'text-slate-900' : 'text-slate-500'}`}>توصيل لباب المنزل</span>
                       </div>
@@ -778,10 +787,10 @@ export default function AlgerianWatchLandingPage() {
                       )}
                     </button>
 
-                    <button type="button" onClick={() => currentCommune.stop_desk.available && setDeliveryType('desk')} disabled={!currentCommune.stop_desk.available} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${!currentCommune.stop_desk.available ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer'} ${deliveryType === 'desk' ? 'border-[#222355] bg-[#222355]/5' : 'border-slate-200'}`}>
+                    <button type="button" onClick={() => currentCommune.stop_desk.available && setDeliveryType('desk')} disabled={!currentCommune.stop_desk.available} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${!currentCommune.stop_desk.available ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer'} ${deliveryType === 'desk' ? 'border-emerald-800 bg-emerald-50/70' : 'border-slate-200'}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'desk' ? 'border-[#222355]' : 'border-slate-300'}`}>
-                          {deliveryType === 'desk' && <div className="w-2.5 h-2.5 rounded-full bg-[#222355]" />}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === 'desk' ? 'border-emerald-800' : 'border-slate-300'}`}>
+                          {deliveryType === 'desk' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-800" />}
                         </div>
                         <span className={`font-bold text-sm ${currentCommune.stop_desk.available ? 'text-slate-900' : 'text-slate-500'}`}>استلام من مكتب التوصيل</span>
                       </div>
@@ -801,13 +810,13 @@ export default function AlgerianWatchLandingPage() {
                     required
                     value={addressDetails}
                     onChange={e => setAddressDetails(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-800 focus:border-transparent outline-none"
                     placeholder="اسم الحي أو الشارع"
                   />
                 </div>
 
                 {/* Total Recap */}
-                <div className="bg-[#222355]/5 rounded-xl p-4 border border-[#222355]/20">
+                <div className="bg-emerald-950/5 rounded-xl p-4 border border-emerald-900/15">
                   <div className="flex justify-between items-center mb-2 text-sm text-slate-700">
                     <span>ثمن المنتج:</span>
                     <span className="font-bold">{productPrice} دج</span>
@@ -818,7 +827,7 @@ export default function AlgerianWatchLandingPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="font-black text-slate-900 text-base">المجموع النهائي:</span>
-                    <span className="font-black text-[#DC2626] text-xl">{totalPrice} دج</span>
+                    <span className="font-black text-emerald-900 text-2xl">{totalPrice} دج</span>
                   </div>
                 </div>
               </div>
@@ -833,7 +842,7 @@ export default function AlgerianWatchLandingPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-4 bg-[#DC2626] hover:bg-red-700 text-white rounded-xl font-black text-lg shadow-lg shadow-red-500/30 transition-all transform active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 mt-4"
+              className="w-full py-4 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-black text-lg shadow-lg shadow-emerald-900/30 transition-all transform active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 mt-4"
             >
               {isSubmitting ? (
                 <span className="animate-pulse">جاري تسجيل الطلب...</span>

@@ -14,29 +14,29 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#222355",
+  themeColor: "#064e3b",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://affaire-dz.com"),
-  title: "عرض خاص: طقم الساعة الملكية الفاخرة + سوار التاج وخاتم بـ 2900 دج",
-  description: "عرض حصري من Affaire DZ: طقم ساعة رجالية فاخرة بمينا أزرق ملكي + سوار التاج + خاتم ستانلس أنيق داخل علبة إهداء بـ 2900 دج فقط. توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام.",
-  keywords: "Affaire DZ, ساعات رجالية الجزائر, طقم ساعة ملكية, سوار التاج, ساعة 2900 دج, توصيل 58 ولاية, الدفع عند الاستلام",
+  title: "BS Montres | طقم الساعة الملكية الفاخرة 2900 دج",
+  description: "عرض حصري من BS Montres: طقم ساعة رجالية فاخرة بمينا أزرق ملكي + سوار التاج + خاتم ستانلس أنيق داخل علبة إهداء بـ 2900 دج فقط. توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام.",
+  keywords: "BS Montres, بي اس مونتر, ساعات رجالية الجزائر, طقم ساعة ملكية, سوار التاج, ساعة 2900 دج, توصيل 58 ولاية, الدفع عند الاستلام",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: "/images/products/set-blue-01.jpg",
+    shortcut: "/images/products/set-blue-01.jpg",
+    apple: "/images/products/set-blue-01.jpg",
   },
   openGraph: {
-    title: "عرض خاص: طقم الساعة الملكية الفاخرة بـ 2900 دج",
-    description: "طقم ساعة رجالية فاخرة بمينا أزرق ملكي + خاتم ستانلس + سوار التاج داخل علبة إهداء فاخرة بـ 2900 دج فقط. توصيل 58 ولاية والدفع عند الاستلام بعد المعاينة.",
-    siteName: "Affaire DZ",
+    title: "BS Montres | طقم الساعة الملكية الفاخرة بـ 2900 دج",
+    description: "طقم ساعة رجالية فاخرة بمينا أزرق ملكي + خاتم ستانلس + سوار التاج داخل علبة إهداء فاخرة بـ 2900 دج فقط من BS Montres. توصيل 58 ولاية والدفع عند الاستلام بعد المعاينة.",
+    siteName: "BS Montres",
     images: [
       {
         url: "/images/products/set-blue-01.jpg",
         width: 800,
         height: 800,
-        alt: "طقم الساعة الملكية الفاخرة - Affaire DZ"
+        alt: "BS Montres - طقم الساعة الملكية الفاخرة"
       }
     ],
     locale: "ar_DZ",
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "عرض خاص: طقم الساعة الملكية الفاخرة بـ 2900 دج",
-    description: "ساعة كوارتز فاخرة بمينا أزرق ملكي + خاتم وسوار التاج داخل علبة بـ 2900 دج فقط. الدفع عند الاستلام.",
+    title: "BS Montres | طقم الساعة الملكية الفاخرة بـ 2900 دج",
+    description: "ساعة كوارتز فاخرة بمينا أزرق ملكي + خاتم وسوار التاج داخل علبة بـ 2900 دج فقط من BS Montres. الدفع عند الاستلام.",
     images: ["/images/products/set-blue-01.jpg"],
   }
 };
