@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   description: "عرض حصري من BS Montres: طقم ساعة رجالية فاخرة بمينا أزرق ملكي + سوار التاج + خاتم ستانلس أنيق داخل علبة إهداء بـ 2900 دج فقط. توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام.",
   keywords: "BS Montres, بي اس مونتر, ساعات رجالية الجزائر, طقم ساعة ملكية, سوار التاج, ساعة 2900 دج, توصيل 58 ولاية, الدفع عند الاستلام",
   icons: {
-    icon: "/images/products/set-blue-01.jpg",
-    shortcut: "/images/products/set-blue-01.jpg",
-    apple: "/images/products/set-blue-01.jpg",
+    icon: "/images/products/1.webp",
+    shortcut: "/images/products/1.webp",
+    apple: "/images/products/1.webp",
   },
   openGraph: {
     title: "BS Montres | طقم الساعة الملكية الفاخرة بـ 2900 دج",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: "BS Montres",
     images: [
       {
-        url: "/images/products/set-blue-01.jpg",
+        url: "/images/products/1.webp",
         width: 800,
         height: 800,
         alt: "BS Montres - طقم الساعة الملكية الفاخرة"
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BS Montres | طقم الساعة الملكية الفاخرة بـ 2900 دج",
     description: "ساعة كوارتز فاخرة بمينا أزرق ملكي + خاتم وسوار التاج داخل علبة بـ 2900 دج فقط من BS Montres. الدفع عند الاستلام.",
-    images: ["/images/products/set-blue-01.jpg"],
+    images: ["/images/products/1.webp"],
   }
 };
 

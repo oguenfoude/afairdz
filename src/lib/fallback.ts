@@ -23,7 +23,7 @@ export const FALLBACK_MODELS: WatchModel[] = [
   { 
     id: 'm1', 
     name: 'طقم الساعة الملكية الفاخرة (أزرق ملكي)', 
-    image: '/images/products/set-blue-01.jpg', 
+    image: '/images/products/1.webp', 
     badge: 'الأكثر طلباً',
     colorName: 'أزرق ملكي + فضي',
     description: 'طقم ساعة رجالية فاخرة بمينا أزرق ملكي وإطار مسنن + سوار التاج الملكي + خاتم ستانلس مخطط داخل علبة إهداء فاخرة',
@@ -33,11 +33,9 @@ export const FALLBACK_MODELS: WatchModel[] = [
 ];
 
 export const PRODUCT_GALLERY_IMAGES = [
-  { id: 1, src: '/images/products/set-blue-01.jpg', label: 'صورة كاملة للطقم' },
-  { id: 2, src: '/images/products/set-blue-02.jpg', label: 'زاوية جانبية مقربة' },
-  { id: 3, src: '/images/products/set-blue-03.jpg', label: 'لقطة نهارية واقعية' },
-  { id: 4, src: '/images/products/set-blue-04.jpg', label: 'تفاصيل المينا' },
-  { id: 5, src: '/images/products/set-blue-05.jpg', label: 'صينية العرض الفاخرة' },
+  { id: 1, src: '/images/products/1.webp', label: 'طقم الساعة الملكية' },
+  { id: 2, src: '/images/products/2.webp', label: 'زاوية مقربة' },
+  { id: 3, src: '/images/products/3.webp', label: 'صورة الطقم' },
 ];
 
 export const FALLBACK_PACKAGES: PackageOffer[] = [

@@ -70,11 +70,9 @@ const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
 };
 
 const PRODUCT_GALLERY = [
-  { id: 1, image: '/images/products/set-blue-01.jpg', label: 'طقم الساعة الملكية' },
-  { id: 2, image: '/images/products/set-blue-02.jpg', label: 'زاوية 35° مقربة' },
-  { id: 3, image: '/images/products/set-blue-03.jpg', label: 'لقطة نهارية واقعية' },
-  { id: 4, image: '/images/products/set-blue-04.jpg', label: 'تفاصيل المينا' },
-  { id: 5, image: '/images/products/set-blue-05.jpg', label: 'صينية العرض الفاخرة' },
+  { id: 1, image: '/images/products/1.webp', label: 'طقم الساعة الملكية' },
+  { id: 2, image: '/images/products/2.webp', label: 'زاوية مقربة' },
+  { id: 3, image: '/images/products/3.webp', label: 'صورة الطقم' },
 ];
 
 export default function AlgerianWatchLandingPage() {
@@ -124,7 +122,7 @@ export default function AlgerianWatchLandingPage() {
     }).catch(() => setModelsLoading(false));
   }, []);
 
-  const currentDisplayImage = PRODUCT_GALLERY[galleryIndex]?.image || '/images/products/set-blue-01.jpg';
+  const currentDisplayImage = PRODUCT_GALLERY[galleryIndex]?.image || '/images/products/1.webp';
 
   const handleNextImage = () => {
     setGalleryIndex((i) => (i + 1) % PRODUCT_GALLERY.length);
@@ -301,7 +299,7 @@ export default function AlgerianWatchLandingPage() {
     const model = selectedModel || availableModels[0] || {
       id: 'm1',
       name: 'طقم الساعة الملكية الفاخرة (أزرق ملكي)',
-      image: '/images/products/set-blue-01.jpg'
+      image: '/images/products/1.webp'
     };
     if (!/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) { setErrorMessage('يرجى إدخال رقم هاتف جزائري صحيح.'); return; }
     if (!wilayaId) { setErrorMessage('يرجى اختيار ولاية التوصيل.'); return; }
@@ -482,7 +480,7 @@ export default function AlgerianWatchLandingPage() {
             {/* Product Details */}
             <div className="flex gap-4 items-center bg-white p-3 rounded-xl border border-slate-100 mb-4 shadow-sm">
               <div className="relative w-16 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
-                <Image src={orderSuccess.selectedModels[0]?.image || '/images/products/set-blue-01.jpg'} alt="Product" fill sizes="64px" className="object-contain p-1" />
+                <Image src={orderSuccess.selectedModels[0]?.image || '/images/products/1.webp'} alt="Product" fill sizes="64px" className="object-contain p-1" />
               </div>
               <div>
                 <p className="font-bold text-sm text-emerald-900 mb-1">{orderSuccess.selectedModels[0]?.modelName}</p>
@@ -681,7 +679,7 @@ export default function AlgerianWatchLandingPage() {
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 bg-white shrink-0">
-                  <Image src="/images/products/set-blue-01.jpg" alt="طقم الساعة الملكية" fill sizes="64px" className="object-cover" />
+                  <Image src="/images/products/1.webp" alt="طقم الساعة الملكية" fill sizes="64px" className="object-cover" />
                 </div>
                 <div>
                   <span className="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full mb-1">
