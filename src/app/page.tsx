@@ -19,6 +19,7 @@ import {
   Commune
 } from '@/data/wilayas';
 import { trackFBPixel } from '@/components/FacebookPixel';
+import { FALLBACK_MODELS, FALLBACK_PACKAGES, FALLBACK_SETTINGS } from '@/lib/fallback';
 
 interface WatchModel {
   id: string | number;
@@ -71,10 +72,10 @@ const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
 
 export default function AlgerianWatchLandingPage() {
   const [selectedModel, setSelectedModel] = useState<WatchModel | null>(null);
-  const [availableModels, setAvailableModels] = useState<WatchModel[]>([]);
-  const [modelsLoading, setModelsLoading] = useState(true);
-  const [packages, setPackages] = useState<{ totalPrice: number; originalTotal: number }[]>([]);
-  const [notices, setNotices] = useState('');
+  const [availableModels, setAvailableModels] = useState<WatchModel[]>(FALLBACK_MODELS);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [packages, setPackages] = useState<{ totalPrice: number; originalTotal: number }[]>(FALLBACK_PACKAGES);
+  const [notices, setNotices] = useState(FALLBACK_SETTINGS.notices ?? '');
   const [feeOverrides, setFeeOverrides] = useState<{ wilayaId: number; communeId?: number; home?: number; office?: number }[]>([]);
 
   // Form Inputs
@@ -116,7 +117,7 @@ export default function AlgerianWatchLandingPage() {
     }).catch(() => setModelsLoading(false));
   }, []);
 
-  const displayModel = selectedModel ?? availableModels[previewIndex] ?? { id: 0, name: '', image: '/logo.png' };
+  const displayModel = selectedModel ?? availableModels[previewIndex] ?? FALLBACK_MODELS[0];
 
   const handleNextImage = () => {
     if (!selectedModel) {
