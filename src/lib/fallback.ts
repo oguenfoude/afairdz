@@ -20,22 +20,28 @@ export interface PackageOffer {
 }
 
 export const FALLBACK_MODELS: WatchModel[] = [
-  { id: 'm1', name: 'الموديل 1', image: '/images/products/tg-01.webp', available: true, order: 1 },
-  { id: 'm2', name: 'الموديل 2', image: '/images/products/tg-02.webp', available: true, order: 2 },
-  { id: 'm3', name: 'الموديل 3', image: '/images/products/tg-03.webp', available: true, order: 3 },
-  { id: 'm4', name: 'الموديل 4', image: '/images/products/tg-04.webp', available: true, order: 4 },
-  { id: 'm5', name: 'الموديل 5', image: '/images/products/tg-05.webp', available: true, order: 5 },
-  { id: 'm6', name: 'الموديل 6', image: '/images/products/tg-06.webp', available: true, order: 6 },
-  { id: 'm7', name: 'الموديل 7', image: '/images/products/tg-07.webp', available: true, order: 7 },
-  { id: 'm8', name: 'الموديل 8', image: '/images/products/tg-08.webp', available: true, order: 8 },
-  { id: 'm9', name: 'الموديل 9', image: '/images/products/tg-09.webp', available: true, order: 9 },
-  { id: 'm10', name: 'الموديل 10', image: '/images/products/tg-10.webp', available: true, order: 10 },
+  { 
+    id: 'm1', 
+    name: 'طقم الساعة الملكية الفاخرة (أزرق ملكي)', 
+    image: '/images/products/set-blue-01.jpg', 
+    badge: 'الأكثر طلباً',
+    colorName: 'أزرق ملكي + فضي',
+    description: 'طقم ساعة رجالية فاخرة بمينا أزرق ملكي وإطار مسنن + سوار التاج الملكي + خاتم ستانلس مخطط داخل علبة إهداء فاخرة',
+    available: true, 
+    order: 1 
+  },
+];
+
+export const PRODUCT_GALLERY_IMAGES = [
+  { id: 1, src: '/images/products/set-blue-01.jpg', label: 'صورة كاملة للطقم' },
+  { id: 2, src: '/images/products/set-blue-02.jpg', label: 'زاوية جانبية مقربة' },
+  { id: 3, src: '/images/products/set-blue-03.jpg', label: 'داخل علبة الإهداء' },
 ];
 
 export const FALLBACK_PACKAGES: PackageOffer[] = [
-  { quantity: 1, title: '1 ساعة', pricePerUnit: 1600, totalPrice: 1600, originalTotal: 3200, savings: 1600, bonus: '1600 دج' },
-  { quantity: 2, title: '2 ساعات', pricePerUnit: 1500, totalPrice: 3000, originalTotal: 6400, savings: 3400, bonus: '3000 دج (توفير 200 دج)' },
-  { quantity: 3, title: '3 ساعات', pricePerUnit: 1400, totalPrice: 4200, originalTotal: 9600, savings: 5400, bonus: '4200 دج (توفير 600 دج)' },
+  { quantity: 1, title: 'طقم واحد كامل', pricePerUnit: 2900, totalPrice: 2900, originalTotal: 5800, savings: 2900, bonus: '2900 دج' },
+  { quantity: 2, title: '2 أطقم كاملة', pricePerUnit: 2700, totalPrice: 5400, originalTotal: 11600, savings: 6200, bonus: '5400 دج (توفير 400 دج)' },
+  { quantity: 3, title: '3 أطقم كاملة', pricePerUnit: 2500, totalPrice: 7500, originalTotal: 17400, savings: 9900, bonus: '7500 دج (توفير 1200 دج)' },
 ];
 
 export interface FeeOverride {
@@ -48,5 +54,5 @@ export interface FeeOverride {
 export const FALLBACK_FEES: FeeOverride[] = [];
 
 export const FALLBACK_SETTINGS = {
-  notices: '',
+  notices: 'تخفيض حصري: 2900 دج فقط لفترة محدودة — توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام',
 };

@@ -69,6 +69,12 @@ const isPurchasePixelAlreadyFired = (orderId: string): boolean => {
   return false;
 };
 
+const PRODUCT_GALLERY = [
+  { id: 1, image: '/images/products/set-blue-01.jpg', label: 'طقم الساعة الملكية' },
+  { id: 2, image: '/images/products/set-blue-02.jpg', label: 'زاوية مقربة' },
+  { id: 3, image: '/images/products/set-blue-03.jpg', label: 'داخل علبة الإهداء' },
+];
+
 export default function AlgerianWatchLandingPage() {
   const [selectedModel, setSelectedModel] = useState<WatchModel | null>(null);
   const [availableModels, setAvailableModels] = useState<WatchModel[]>([]);
@@ -94,10 +100,7 @@ export default function AlgerianWatchLandingPage() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Manual preview: arrows/swipe move through images only when nothing is picked.
-  // No auto-slide — the viewer stays still until the user acts.
-  // Preview is display-only — selection stays null until an explicit pick.
-  const [previewIndex, setPreviewIndex] = useState(0);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -109,6 +112,9 @@ export default function AlgerianWatchLandingPage() {
         .filter((m: WatchModel) => m.available !== false)
         .sort((a: WatchModel, b: WatchModel) => (a.order || 0) - (b.order || 0));
       setAvailableModels(avail);
+      if (avail.length > 0) {
+        setSelectedModel(avail[0]);
+      }
       if (Array.isArray(settingsData?.packages)) setPackages(settingsData.packages);
       if (typeof settingsData?.notices === 'string') setNotices(settingsData.notices);
       if (Array.isArray(feesData)) setFeeOverrides(feesData);
@@ -116,26 +122,14 @@ export default function AlgerianWatchLandingPage() {
     }).catch(() => setModelsLoading(false));
   }, []);
 
-  const displayModel = selectedModel ?? availableModels[previewIndex] ?? { id: 0, name: '', image: '/logo.png' };
+  const currentDisplayImage = PRODUCT_GALLERY[galleryIndex]?.image || '/images/products/set-blue-01.jpg';
 
   const handleNextImage = () => {
-    if (!selectedModel) {
-      setPreviewIndex((i) => (i + 1) % availableModels.length);
-      return;
-    }
-    const currentIndex = availableModels.findIndex(m => m.id === selectedModel?.id);
-    const nextIndex = (currentIndex + 1) % availableModels.length;
-    setSelectedModel(availableModels[nextIndex]);
+    setGalleryIndex((i) => (i + 1) % PRODUCT_GALLERY.length);
   };
 
   const handlePrevImage = () => {
-    if (!selectedModel) {
-      setPreviewIndex((i) => (i - 1 + availableModels.length) % availableModels.length);
-      return;
-    }
-    const currentIndex = availableModels.findIndex(m => m.id === selectedModel?.id);
-    const prevIndex = currentIndex === 0 ? availableModels.length - 1 : currentIndex - 1;
-    setSelectedModel(availableModels[prevIndex]);
+    setGalleryIndex((i) => (i - 1 + PRODUCT_GALLERY.length) % PRODUCT_GALLERY.length);
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -187,8 +181,8 @@ export default function AlgerianWatchLandingPage() {
   const currentDeliveryFee = deliveryType === 'desk' ? deskFee : domicileFee;
 
   // Admin packages win: first package = single-watch price shown on landing
-  const productPrice = packages[0]?.totalPrice ?? 1600;
-  const originalPrice = packages[0]?.originalTotal ?? 3200;
+  const productPrice = packages[0]?.totalPrice ?? 2900;
+  const originalPrice = packages[0]?.originalTotal ?? 5800;
   const totalPrice = productPrice + currentDeliveryFee;
 
   const hasLocation = Boolean(wilayaId && communeName);
@@ -202,9 +196,11 @@ export default function AlgerianWatchLandingPage() {
       }
     }
 
-    // Strict validation: must have filled ALL form fields completely, including model!
+    const activeModel = selectedModel || availableModels[0];
+
+    // Strict validation: must have filled ALL form fields completely!
     if (
-      !selectedModel ||
+      !activeModel ||
       fullName.trim().length < 2 ||
       !/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone) ||
       !wilayaId ||
@@ -225,9 +221,9 @@ export default function AlgerianWatchLandingPage() {
       deliveryType,
       addressDetails: addressDetails.trim(),
       selectedModels: [{
-        modelId: selectedModel.id,
-        modelName: selectedModel.name,
-        image: selectedModel.image
+        modelId: activeModel.id,
+        modelName: activeModel.name,
+        image: activeModel.image
       }],
       estimatedTotal: totalPrice,
       stage
@@ -300,8 +296,11 @@ export default function AlgerianWatchLandingPage() {
     setErrorMessage('');
 
     if (!fullName.trim()) { setErrorMessage('يرجى إدخال الاسم واللقب.'); return; }
-    if (!selectedModel) { setErrorMessage('يرجى اختيار الموديل المطلوب أولاً.'); return; }
-    const model = selectedModel;
+    const model = selectedModel || availableModels[0] || {
+      id: 'm1',
+      name: 'طقم الساعة الملكية الفاخرة (أزرق ملكي)',
+      image: '/images/products/set-blue-01.jpg'
+    };
     if (!/^(0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) { setErrorMessage('يرجى إدخال رقم هاتف جزائري صحيح.'); return; }
     if (!wilayaId) { setErrorMessage('يرجى اختيار ولاية التوصيل.'); return; }
     if (!communeName) { setErrorMessage('يرجى اختيار البلدية.'); return; }
@@ -544,10 +543,10 @@ export default function AlgerianWatchLandingPage() {
 
         {/* Product Title */}
         <h1 className="px-4 text-xl sm:text-2xl font-black text-slate-900 leading-tight mb-2">
-          الساعة الأكثر طلباً: طقم ساعة رجالية فاخرة + خاتم وبراسلي مجاناً
+          طقم الساعة الملكية الفاخرة: ساعة بمينا أزرق ملكي + سوار التاج + خاتم مجاناً
         </h1>
         <p className="px-4 text-base sm:text-lg font-black text-[#222355] leading-tight mb-2">
-          🎁 الهدية الأمثل لأحبائكم
+          🎁 طقم متكامل داخل علبة إهداء فاخرة — التخفيض الأقوى في الجزائر
         </p>
 
         {/* Reviews snippet */}
@@ -566,6 +565,9 @@ export default function AlgerianWatchLandingPage() {
         <div className="px-4 flex items-end gap-3 mb-4">
           <div className="text-3xl font-black text-[#DC2626]">{productPrice} دج</div>
           <div className="text-base text-slate-400 line-through font-bold pb-1">{originalPrice} دج</div>
+          <span className="bg-red-100 text-red-700 text-xs font-black px-2.5 py-1 rounded-full pb-1">
+            خصم 50%
+          </span>
         </div>
 
         {/* Main Product Image */}
@@ -575,22 +577,23 @@ export default function AlgerianWatchLandingPage() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEndEvent}
         >
-          {/* Navigation Arrows (Visible on Desktop / Easier tapping) */}
-          <button onClick={handleNextImage} type="button" className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <button onClick={handlePrevImage} type="button" className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+          {/* Navigation Arrows */}
+          <button onClick={handlePrevImage} type="button" aria-label="الصورة السابقة" className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all">
             <ChevronRight className="w-6 h-6" />
+          </button>
+          <button onClick={handleNextImage} type="button" aria-label="الصورة التالية" className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white p-2.5 rounded-full shadow-md text-[#222355] transition-all">
+            <ChevronLeft className="w-6 h-6" />
           </button>
 
           {/* Model Number Badge Floating on Top */}
-          <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-sm font-black shadow-lg border border-white/20">
-            {selectedModel ? selectedModel.name : `${displayModel.name} — للعرض`}
+          <div className="absolute top-4 right-4 z-10 bg-[#222355] text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-black shadow-lg border border-white/20">
+            {PRODUCT_GALLERY[galleryIndex]?.label || 'طقم الساعة الملكية'}
           </div>
+
           <Image
-            key={displayModel.id}
-            src={displayModel.image}
-            alt={displayModel.name}
+            key={currentDisplayImage}
+            src={currentDisplayImage}
+            alt="طقم الساعة الملكية الفاخرة"
             fill
             sizes="(max-width: 768px) 100vw, 800px"
             priority
@@ -598,45 +601,35 @@ export default function AlgerianWatchLandingPage() {
             loading="eager"
             className="object-contain"
           />
-          {!selectedModel && (
-            <div className="absolute bottom-4 inset-x-0 z-10 flex justify-center pointer-events-none">
-              <span className="bg-white/85 text-[#222355] px-4 py-1.5 rounded-full text-xs font-black shadow">
-                الصور للعرض — اختر موديلك من الأسفل 👇
-              </span>
-            </div>
-          )}
+
+          <div className="absolute bottom-4 inset-x-0 z-10 flex justify-center pointer-events-none">
+            <span className="bg-white/90 backdrop-blur-sm text-[#222355] px-3.5 py-1 rounded-full text-xs font-bold shadow-sm">
+              اسحب للتنقل بين الزوايا ({galleryIndex + 1} من {PRODUCT_GALLERY.length})
+            </span>
+          </div>
         </div>
 
         {/* Image Gallery Thumbnails */}
         <div className="px-4 py-4 border-b border-slate-100 bg-white">
-          {modelsLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#222355] border-t-transparent" />
-              <span className="mr-3 text-sm font-bold text-slate-500">جاري تحميل الموديلات...</span>
-            </div>
-          ) : availableModels.length === 0 ? (
-            <p className="text-center text-sm font-bold text-slate-500 py-6">لا توجد موديلات متاحة حالياً — عد قريباً</p>
-          ) : (
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
-            {availableModels.map((model) => (
+          <div className="flex gap-3 justify-center">
+            {PRODUCT_GALLERY.map((item, idx) => (
               <button
-                key={model.id}
-                onClick={() => setSelectedModel(model)}
+                key={item.id}
+                onClick={() => setGalleryIndex(idx)}
                 type="button"
-                className={`relative w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 snap-start bg-slate-50 transition-all ${
-                  selectedModel?.id === model.id ? 'border-[#222355] ring-2 ring-[#222355]/20' : 'border-slate-200 opacity-70'
+                className={`relative w-20 h-20 rounded-2xl overflow-hidden border-2 bg-slate-50 transition-all ${
+                  galleryIndex === idx ? 'border-[#222355] ring-2 ring-[#222355]/30 scale-105' : 'border-slate-200 opacity-70 hover:opacity-100'
                 }`}
               >
-                <Image src={model.image} alt={model.name} fill sizes="64px" loading="lazy" decoding="async" className="object-cover p-1" />
-                <span className="absolute bottom-0 inset-x-0 bg-[#222355]/85 text-white text-[10px] font-bold py-0.5 text-center leading-tight">
-                  {model.name}
+                <Image src={item.image} alt={item.label} fill sizes="80px" loading="lazy" decoding="async" className="object-cover p-1" />
+                <span className="absolute bottom-0 inset-x-0 bg-[#222355]/90 text-white text-[9px] font-bold py-0.5 text-center leading-tight">
+                  {item.label}
                 </span>
               </button>
             ))}
           </div>
-          )}
-          <p className="pt-2 text-center text-xs font-bold text-slate-500">
-            📸 ملاحظة: كل الصور حقيقية مصورة من طرفنا
+          <p className="pt-3 text-center text-xs font-bold text-slate-500">
+            📸 صور حقيقية ومطابقة 100% للمنتج الذي ستستلمه
           </p>
         </div>
 
@@ -644,20 +637,24 @@ export default function AlgerianWatchLandingPage() {
         <div className="px-4 py-6 border-b border-slate-100">
           <ul className="space-y-3">
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355]"><Check className="w-4 h-4" /></span>
-              ساعة كوارتز عالية الجودة
+              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Check className="w-4 h-4" /></span>
+              ساعة كوارتز رجالية فاخرة بمينا أزرق ملكي وإطار مسنن من الستانلس ستيل
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355]"><Check className="w-4 h-4" /></span>
-              خاتم ستانلس فاخر متناسق مع الساعة
+              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Check className="w-4 h-4" /></span>
+              سوار التاج الملكي بلون فضي ولوحة زرقاء متناسقة
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355]"><Check className="w-4 h-4" /></span>
-              براسلي كلاسيكي هدية
+              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Check className="w-4 h-4" /></span>
+              خاتم ستانلس ستيل أصلي بتصميم مخطط أنيق وعصري
             </li>
             <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355]"><Gift className="w-4 h-4" /></span>
-              تأتي جميعها في علبة إهداء أنيقة
+              <span className="w-8 h-8 rounded-full bg-[#222355]/10 flex items-center justify-center text-[#222355] shrink-0"><Gift className="w-4 h-4" /></span>
+              تأتي جميع القطع كاملة داخل علبة إهداء سوداء فاخرة
+            </li>
+            <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
+              <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 shrink-0"><CheckCircle2 className="w-4 h-4" /></span>
+              الدفع عند الاستلام بعد فتح الطرد ومعاينته بيدك
             </li>
           </ul>
         </div>
@@ -671,27 +668,25 @@ export default function AlgerianWatchLandingPage() {
 
           <form onSubmit={handleSubmitOrder} className="space-y-4">
 
-            {/* Model Selection Dropdown (Always Visible) */}
-            <div className="mb-2">
-              <label htmlFor="modelSelectForm" className="block text-sm font-bold text-slate-900 mb-1.5">اختر الموديل (اللون) المطلوب <span className="text-[#DC2626]">*</span></label>
-              <div className="relative">
-                <select
-                  id="modelSelectForm"
-                  value={selectedModel?.id ?? ''}
-                  onChange={(e) => {
-                    const model = availableModels.find(m => String(m.id) === e.target.value);
-                    setSelectedModel(model ?? null);
-                  }}
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-[#222355] focus:border-transparent outline-none appearance-none pr-4 pl-10"
-                >
-                  <option value="">-- اختر الموديل --</option>
-                  {availableModels.map(model => (
-                    <option key={model.id} value={model.id}>{model.name}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
-                  ▼
+            {/* Single Product Showcase Card */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 bg-white shrink-0">
+                  <Image src="/images/products/set-blue-01.jpg" alt="طقم الساعة الملكية" fill sizes="64px" className="object-cover" />
                 </div>
+                <div>
+                  <span className="inline-block bg-green-100 text-green-800 text-[10px] font-black px-2 py-0.5 rounded-full mb-1">
+                    ✓ مشمول في العرض المخفض
+                  </span>
+                  <h3 className="text-sm font-black text-slate-900 leading-snug">
+                    طقم الساعة الملكية (ساعة + سوار التاج + خاتم + علبة)
+                  </h3>
+                  <p className="text-xs text-slate-500 font-bold">اللون: أزرق ملكي وفضي</p>
+                </div>
+              </div>
+              <div className="text-left shrink-0">
+                <span className="text-lg font-black text-[#DC2626] block">{productPrice} دج</span>
+                <span className="text-xs text-slate-400 line-through font-bold">{originalPrice} دج</span>
               </div>
             </div>
 

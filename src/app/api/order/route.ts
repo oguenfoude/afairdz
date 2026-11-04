@@ -131,9 +131,9 @@ export async function POST(req: NextRequest) {
       addressDetails: body.addressDetails ? body.addressDetails.trim() : undefined,
       selectedModels: body.selectedModels || [],
       quantity: Number(body.quantity) || 1,
-      productPrice: Number(body.productPrice) || 1600,
+      productPrice: Number(body.productPrice) || 2900,
       deliveryFee: Number(body.deliveryFee) || 0,
-      totalPrice: Number(body.totalPrice) || 1600,
+      totalPrice: Number(body.totalPrice) || 2900,
       notes: body.notes ? body.notes.trim() : undefined,
       createdAt
     };

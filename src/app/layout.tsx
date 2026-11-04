@@ -19,30 +19,24 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://affaire-dz.com"),
-  title: "تخفيض من 300اف الى 150 الف لمدة 3ايام",
-  description: "عرض حصري من Affaire DZ: ساعة كوارتز فاخرة + خاتم ستانلس + براسلي أنيق داخل علبة إهداء بـ 1600 دج فقط. توصيل لـ 58 ولاية بأسعار مخفّضة والدفع بعد المعاينة عند الاستلام.",
-  keywords: "Affaire DZ, ساعات رجالية الجزائر, طقم ساعة وخاتم وبراسلي, ساعة 1600 دج, توصيل 58 ولاية, الدفع عند الاستلام",
+  title: "عرض خاص: طقم الساعة الملكية الفاخرة + سوار التاج وخاتم بـ 2900 دج",
+  description: "عرض حصري من Affaire DZ: طقم ساعة رجالية فاخرة بمينا أزرق ملكي + سوار التاج + خاتم ستانلس أنيق داخل علبة إهداء بـ 2900 دج فقط. توصيل لـ 58 ولاية والدفع بعد المعاينة عند الاستلام.",
+  keywords: "Affaire DZ, ساعات رجالية الجزائر, طقم ساعة ملكية, سوار التاج, ساعة 2900 دج, توصيل 58 ولاية, الدفع عند الاستلام",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
     apple: "/logo.png",
   },
   openGraph: {
-    title: "تخفيض من 300اف الى 150 الف لمدة 3ايام",
-    description: "عرض حصري من Affaire DZ: ساعة كوارتز أصلية + خاتم ستانلس + براسلي أنيق داخل علبة إهداء. توصيل 58 ولاية والدفع عند الاستلام بعد المعاينة.",
+    title: "عرض خاص: طقم الساعة الملكية الفاخرة بـ 2900 دج",
+    description: "طقم ساعة رجالية فاخرة بمينا أزرق ملكي + خاتم ستانلس + سوار التاج داخل علبة إهداء فاخرة بـ 2900 دج فقط. توصيل 58 ولاية والدفع عند الاستلام بعد المعاينة.",
     siteName: "Affaire DZ",
     images: [
       {
-        url: "/logo.png",
-        width: 1024,
-        height: 558,
-        alt: "Affaire DZ Logo"
-      },
-      {
-        url: "/images/products/24.webp",
+        url: "/images/products/set-blue-01.jpg",
         width: 800,
         height: 800,
-        alt: "طقم ساعة يد رجالية - Affaire DZ"
+        alt: "طقم الساعة الملكية الفاخرة - Affaire DZ"
       }
     ],
     locale: "ar_DZ",
@@ -50,9 +44,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "تخفيض من 300اف الى 150 الف لمدة 3ايام",
-    description: "ساعة كوارتز فاخرة + خاتم وبراسلي داخل علبة بـ 1600 دج فقط. الدفع عند الاستلام.",
-    images: ["/logo.png"],
+    title: "عرض خاص: طقم الساعة الملكية الفاخرة بـ 2900 دج",
+    description: "ساعة كوارتز فاخرة بمينا أزرق ملكي + خاتم وسوار التاج داخل علبة بـ 2900 دج فقط. الدفع عند الاستلام.",
+    images: ["/images/products/set-blue-01.jpg"],
   }
 };
 
