@@ -187,10 +187,43 @@ export async function POST(req: NextRequest) {
     // Persist phone so repeat orders are blocked forever (survives restarts)
     await recordOrderPhone(cleanPhone, orderId);
 
+    // =========================================================================
+    // STEP 4 (OPTIONAL): SERVER-SIDE CAPI — Purchase event backup
+    // Fires only if FACEBOOK_ACCESS_TOKEN is set in env.
+    // The eventID is returned to the client so both Pixel + CAPI are deduplicated.
+    // =========================================================================
+    const capiEventId = body.capiEventId || ('srv_' + orderId + '_' + Date.now());
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://affaire-dz.com';
+      await fetch(`${siteUrl}/api/capi`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventName: 'Purchase',
+          eventId: capiEventId,
+          eventSourceUrl: siteUrl,
+          userData: {
+            phone: cleanPhone,
+            fbp: body.fbp,
+            fbc: body.fbc,
+          },
+          customData: {
+            currency: 'DZD',
+            value: orderData.totalPrice,
+            content_name: orderData.selectedModels.map((m: { modelName: string }) => m.modelName).join(' + ') || 'BS Montres Set',
+            content_ids: [orderId],
+            content_type: 'product',
+            num_items: orderData.quantity,
+          },
+        }),
+      }).catch((e) => console.warn('[Order] CAPI fire failed (non-fatal):', e));
+    } catch { /* never let CAPI errors break the order response */ }
+
     return NextResponse.json({
       success: true,
       orderId,
       emailSent,
+      capiEventId, // returned so client-side Pixel uses same eventID for deduplication
       message: 'تم تأكيد طلبك بنجاح! سنتصل بك هاتفياً في أقرب وقت لتأكيد الشحن.'
     });
   } catch (error: unknown) {
