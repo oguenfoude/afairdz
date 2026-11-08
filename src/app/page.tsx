@@ -18,7 +18,7 @@ import {
   getWilayaDisplayName,
   Commune
 } from '@/data/wilayas';
-import { trackFBPixel, generateEventId, getFbCookies } from '@/components/FacebookPixel';
+import { trackFBPixel } from '@/components/FacebookPixel';
 
 interface WatchModel {
   id: string | number;
@@ -329,15 +329,10 @@ export default function AlgerianWatchLandingPage() {
         }]
       };
 
-      // Generate a unique event ID before the request so both browser Pixel
-      // and server CAPI use the SAME ID → Meta deduplicates correctly.
-      const capiEventId = generateEventId();
-      const { fbp, fbc } = getFbCookies();
-
       const res = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...orderPayload, capiEventId, fbp, fbc })
+        body: JSON.stringify(orderPayload)
       });
 
       const data = await res.json();
@@ -355,8 +350,6 @@ export default function AlgerianWatchLandingPage() {
       const isDuplicateOrder = data.isDuplicate === true;
       if (!isDuplicateOrder && data.orderId) {
         const orderId = String(data.orderId);
-        // Use the same capiEventId generated above — CAPI server already fired with this ID.
-        // Meta deduplicates browser + server events when event_name AND event_id match.
         if (!isPurchasePixelAlreadyFired(orderId)) {
           trackFBPixel(
             'Purchase',
@@ -369,7 +362,7 @@ export default function AlgerianWatchLandingPage() {
               num_items: 1,
               order_id: orderId
             },
-            { eventID: capiEventId } // matches CAPI eventID → Meta deduplicates
+            { eventID: orderId } // Matching unique transaction ID (exact 1:1 match)
           );
         }
       }

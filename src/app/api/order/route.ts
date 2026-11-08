@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderNotification, OrderData, getAdminRecipients } from '@/lib/mailer';
 import { syncOrderToGoogleSheet, updateOrderEmailStatus } from '@/lib/googleSheet';
 import { getPhoneHistory, isBlocked, recordOrderPhone, blockPhone, BLOCKED_MESSAGE } from '@/lib/phoneGuard';
-import { sendMetaCapiEvent } from '@/lib/metaCapi';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30; // Max execution duration for external APIs (Google Sheets + SMTP)
@@ -189,47 +188,15 @@ export async function POST(req: NextRequest) {
     await recordOrderPhone(cleanPhone, orderId);
 
     // =========================================================================
-    // STEP 4 (OPTIONAL): SERVER-SIDE CAPI — Purchase event backup
-    // Fires directly in-process so it never fails due to network/hostname issues.
-    // Both Pixel and CAPI share the exact same eventId for deduplication.
+    // STEP 4: META TRACKING SAFETY
+    // We rely exclusively on the client-side Pixel trigger (with strict local guards)
+    // exactly like the rock-solid 'main' branch, ensuring 1 order = 1 Purchase event.
     // =========================================================================
-    const capiEventId = body.capiEventId || ('srv_' + orderId + '_' + Date.now());
-    const clientIpAddress =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      req.headers.get('x-real-ip') ||
-      '0.0.0.0';
-    const clientUserAgent = req.headers.get('user-agent') || '';
-
-    try {
-      await sendMetaCapiEvent({
-        eventName: 'Purchase',
-        eventId: capiEventId,
-        eventSourceUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://affaire-dz.com',
-        userData: {
-          phone: cleanPhone,
-          fbp: body.fbp,
-          fbc: body.fbc,
-          clientIpAddress,
-          clientUserAgent,
-        },
-        customData: {
-          currency: 'DZD',
-          value: orderData.totalPrice,
-          content_name: orderData.selectedModels.map((m: { modelName: string }) => m.modelName).join(' + ') || 'BS Montres Set',
-          content_ids: [orderId],
-          content_type: 'product',
-          num_items: orderData.quantity,
-        },
-      });
-    } catch (e) {
-      console.warn('[Order] Direct CAPI fire failed (non-fatal):', e);
-    }
 
     return NextResponse.json({
       success: true,
       orderId,
       emailSent,
-      capiEventId, // returned so client-side Pixel uses same eventID for deduplication
       message: 'تم تأكيد طلبك بنجاح! سنتصل بك هاتفياً في أقرب وقت لتأكيد الشحن.'
     });
   } catch (error: unknown) {
