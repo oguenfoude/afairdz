@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderNotification, OrderData, getAdminRecipients } from '@/lib/mailer';
 import { syncOrderToGoogleSheet, updateOrderEmailStatus } from '@/lib/googleSheet';
 import { getPhoneHistory, isBlocked, recordOrderPhone, blockPhone, BLOCKED_MESSAGE } from '@/lib/phoneGuard';
+import { sendMetaCapiEvent } from '@/lib/metaCapi';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30; // Max execution duration for external APIs (Google Sheets + SMTP)
@@ -189,35 +190,40 @@ export async function POST(req: NextRequest) {
 
     // =========================================================================
     // STEP 4 (OPTIONAL): SERVER-SIDE CAPI — Purchase event backup
-    // Fires only if FACEBOOK_ACCESS_TOKEN is set in env.
-    // The eventID is returned to the client so both Pixel + CAPI are deduplicated.
+    // Fires directly in-process so it never fails due to network/hostname issues.
+    // Both Pixel and CAPI share the exact same eventId for deduplication.
     // =========================================================================
     const capiEventId = body.capiEventId || ('srv_' + orderId + '_' + Date.now());
+    const clientIpAddress =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      '0.0.0.0';
+    const clientUserAgent = req.headers.get('user-agent') || '';
+
     try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://affaire-dz.com';
-      await fetch(`${siteUrl}/api/capi`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventName: 'Purchase',
-          eventId: capiEventId,
-          eventSourceUrl: siteUrl,
-          userData: {
-            phone: cleanPhone,
-            fbp: body.fbp,
-            fbc: body.fbc,
-          },
-          customData: {
-            currency: 'DZD',
-            value: orderData.totalPrice,
-            content_name: orderData.selectedModels.map((m: { modelName: string }) => m.modelName).join(' + ') || 'BS Montres Set',
-            content_ids: [orderId],
-            content_type: 'product',
-            num_items: orderData.quantity,
-          },
-        }),
-      }).catch((e) => console.warn('[Order] CAPI fire failed (non-fatal):', e));
-    } catch { /* never let CAPI errors break the order response */ }
+      await sendMetaCapiEvent({
+        eventName: 'Purchase',
+        eventId: capiEventId,
+        eventSourceUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://affaire-dz.com',
+        userData: {
+          phone: cleanPhone,
+          fbp: body.fbp,
+          fbc: body.fbc,
+          clientIpAddress,
+          clientUserAgent,
+        },
+        customData: {
+          currency: 'DZD',
+          value: orderData.totalPrice,
+          content_name: orderData.selectedModels.map((m: { modelName: string }) => m.modelName).join(' + ') || 'BS Montres Set',
+          content_ids: [orderId],
+          content_type: 'product',
+          num_items: orderData.quantity,
+        },
+      });
+    } catch (e) {
+      console.warn('[Order] Direct CAPI fire failed (non-fatal):', e);
+    }
 
     return NextResponse.json({
       success: true,
