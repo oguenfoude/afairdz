@@ -20,10 +20,10 @@ export interface PackageOffer {
 }
 
 export const FALLBACK_MODELS: WatchModel[] = [
-  { id: 'm1', name: 'الموديل 1', image: '/images/products/tg-03-v2.webp', available: true, order: 1 },
-  { id: 'm2', name: 'الموديل 2', image: '/images/products/tg-04.webp', available: true, order: 2 },
-  { id: 'm3', name: 'الموديل 3', image: '/images/products/tg-05.webp', available: true, order: 3 },
-  { id: 'm4', name: 'الموديل 4', image: '/images/products/tg-06.webp', available: true, order: 4 },
+  { id: 'm1', name: 'الموديل 1', image: '/images/products/tg-12.webp', available: true, order: 1 },
+  { id: 'm2', name: 'الموديل 2', image: '/images/products/tg-11.webp', available: true, order: 2 },
+  { id: 'm3', name: 'الموديل 3', image: '/images/products/tg-03-v2.webp', available: true, order: 3 },
+  { id: 'm4', name: 'الموديل 4', image: '/images/products/tg-04.webp', available: true, order: 4 },
   { id: 'm5', name: 'الموديل 5', image: '/images/products/tg-07-v2.webp', available: true, order: 5 },
   { id: 'm6', name: 'الموديل 6', image: '/images/products/tg-08.webp', available: true, order: 6 },
   { id: 'm7', name: 'الموديل 7', image: '/images/products/tg-09.webp', available: true, order: 7 },
